@@ -10,7 +10,7 @@ export default function MemorialApp() {
   const [galleryTab, setGalleryTab] = useState('picture'); 
   const [selectedContent, setSelectedContent] = useState(null); 
   const [isPannellumLoaded, setIsPannellumLoaded] = useState(false);
-  const [toastMessage, setToastMessage] = useState(""); 
+  const [toastMessage, setToastMessage] = useState([]); // 줄바꿈을 위해 배열 처리
   const [showToast, setShowToast] = useState(false);
   const [isFlowering, setIsFlowering] = useState(false);
   
@@ -27,15 +27,15 @@ export default function MemorialApp() {
   const pannellumInstance = useRef(null);
   const popupVideoRef = useRef(null);
 
-  const displayToast = (msg) => {
-    setToastMessage(msg);
+  const displayToast = (msgArray) => {
+    setToastMessage(msgArray);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
 
   const handleFlower = () => {
     if (hasFlowered) {
-      displayToast("이미 헌화하셨습니다. 따뜻한 마음 감사합니다.");
+      displayToast(["이미 헌화하셨습니다.", "따뜻한 마음 감사합니다."]);
       return;
     }
     setHasFlowered(true);
@@ -49,7 +49,7 @@ export default function MemorialApp() {
   const handleGuestbookSubmit = (e) => {
     e.preventDefault();
     if (!inputName.trim() || !inputMsg.trim()) {
-      displayToast("이름과 내용을 모두 입력해주세요.");
+      displayToast(["이름과 내용을", "모두 입력해주세요."]);
       return;
     }
     const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -57,7 +57,7 @@ export default function MemorialApp() {
     setGuestbookList([newEntry, ...guestbookList]);
     setInputName("");
     setInputMsg("");
-    displayToast("방명록이 등록되었습니다.");
+    displayToast(["방명록이 등록되었습니다."]);
   };
 
   useEffect(() => {
@@ -187,9 +187,9 @@ export default function MemorialApp() {
         {activeMenu === 'gallery' && !selectedContent && (
           <div className="viewer-container" style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
             <div ref={viewerRef} style={{ width: '100%', height: '100%' }} />
-            <div className="tab-menu" style={{ position: 'absolute', top: '30px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '10px', zIndex: 60, background: 'rgba(0,0,0,0.5)', padding: '5px', borderRadius: '30px' }}>
+            <div className="tab-menu">
               {['picture', 'video', 'relics'].map(tab => (
-                <button key={tab} onClick={() => handleTabChange(tab)} style={{ padding: '8px 15px', borderRadius: '20px', border: 'none', color: 'white', background: galleryTab === tab ? 'rgba(255,255,255,0.3)' : 'transparent', fontSize: '0.8rem' }}>
+                <button key={tab} onClick={() => handleTabChange(tab)} className={galleryTab === tab ? 'active' : ''}>
                   {tab === 'picture' ? '사진관' : tab === 'video' ? '영상관' : '유품관'}
                 </button>
               ))}
@@ -212,7 +212,13 @@ export default function MemorialApp() {
           </div>
         )}
 
-        {showToast && <div className="toast" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '15px 30px', borderRadius: '30px', zIndex: 500 }}>{toastMessage}</div>}
+        {showToast && (
+          <div className="toast">
+            {toastMessage.map((line, idx) => (
+              <div key={idx} style={{ fontSize: '0.95rem', marginBottom: idx === 0 && toastMessage.length > 1 ? '4px' : 0 }}>{line}</div>
+            ))}
+          </div>
+        )}
 
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap');
@@ -223,20 +229,12 @@ export default function MemorialApp() {
             .portrait-lock-container { max-width: 450px; left: 50%; transform: translateX(-50%); border-left: 1px solid #333; border-right: 1px solid #333; }
           }
 
-          /* 헌화 국화: 하단 정중앙에서 살짝 상승하며 사라지는 애니메이션 */
           @keyframes flower-up-fade {
             0% { transform: translate(-50%, 0) scale(0.7); opacity: 0; }
             20% { opacity: 1; }
             100% { transform: translate(-50%, -150px) scale(1.1); opacity: 0; }
           }
-          .flower-up-fade { 
-            position: absolute; 
-            left: 50%; 
-            bottom: 25%; 
-            z-index: 100; 
-            pointer-events: none; 
-            animation: flower-up-fade 2.5s ease-out forwards; 
-          }
+          .flower-up-fade { position: absolute; left: 50%; bottom: 25%; z-index: 100; pointer-events: none; animation: flower-up-fade 2.5s ease-out forwards; }
 
           .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7); display: flex; align-items: flex-end; justify-content: center; }
           .modal-content { width: 100%; max-width: 450px; height: 80%; background: #1a1a1a; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; }
@@ -248,9 +246,11 @@ export default function MemorialApp() {
           .guestbook-item p { color: #eee; margin: 0; }
           .guestbook-form { padding: 20px; background: #111; display: flex; flex-direction: column; gap: 10px; }
           
-          .custom-hotspot-wrapper { width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 10px; overflow: hidden; position: relative; }
-          .hotspot-img { width: 100%; height: 100%; object-fit: cover; }
-          .hotspot-label { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); font-size: 10px; color: white; text-align: center; padding: 2px 0; }
+          .tab-menu { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 60; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
+          .tab-menu button { min-width: 75px; height: 36px; padding: 0 12px; border-radius: 20px; border: none; color: white; background: transparent; fontSize: 0.85rem; whiteSpace: nowrap; display: flex; alignItems: center; justifyContent: center; }
+          .tab-menu button.active { background: rgba(255,255,255,0.3); font-weight: bold; }
+
+          .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 15px 35px; border-radius: 20px; z-index: 500; text-align: center; backdrop-filter: blur(5px); }
           input::placeholder { color: #ccc; }
         `}</style>
       </div>
