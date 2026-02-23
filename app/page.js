@@ -40,8 +40,7 @@ export default function MemorialApp() {
     }
     setHasFlowered(true);
     setIsFlowering(true);
-    // 3초 후 꽃 이미지를 사라지게 함
-    setTimeout(() => setIsFlowering(false), 3000);
+    setTimeout(() => setIsFlowering(false), 2600);
   };
 
   const handleEnterGallery = () => setActiveMenu('gallery');
@@ -124,7 +123,6 @@ export default function MemorialApp() {
       <Script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js" strategy="afterInteractive" onLoad={() => setIsPannellumLoaded(true)} />
       
       <div className="portrait-lock-container">
-        {/* 메인 화면 */}
         {activeMenu === 'main' && (
           <div style={{ position: 'relative', width: '100%', height: '100%' }}>
             <img src="/images/main.jpg" alt="Main" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -152,16 +150,14 @@ export default function MemorialApp() {
               </div>
             </div>
 
-            {/* 국화 애니메이션 복구 */}
             {isFlowering && (
-              <div className="flower-up">
-                <img src="/images/guk.png" alt="꽃" style={{ width: '120px', filter: 'drop-shadow(0 0 10px rgba(255,215,0,0.6)) drop-shadow(0 0 2px white)' }} />
+              <div className="flower-up-fade">
+                <img src="/images/guk.png" alt="꽃" style={{ width: '110px', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }} />
               </div>
             )}
           </div>
         )}
 
-        {/* 방명록 모달 */}
         {showGuestbook && (
           <div className="modal-overlay" onClick={() => setShowGuestbook(false)}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -188,7 +184,6 @@ export default function MemorialApp() {
           </div>
         )}
 
-        {/* 갤러리 뷰어 */}
         {activeMenu === 'gallery' && !selectedContent && (
           <div className="viewer-container" style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
             <div ref={viewerRef} style={{ width: '100%', height: '100%' }} />
@@ -203,7 +198,6 @@ export default function MemorialApp() {
           </div>
         )}
 
-        {/* 상세 팝업 */}
         {selectedContent && (
           <div className="popup-overlay" style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setSelectedContent(null)}>
             <div className="popup-content" style={{ position: 'relative', width: '100%', maxWidth: '400px', textAlign: 'center', color: 'white' }} onClick={e => e.stopPropagation()}>
@@ -225,20 +219,25 @@ export default function MemorialApp() {
           body { margin: 0; background: #000; overflow: hidden; }
           .portrait-lock-container { position: fixed; inset: 0; display: flex; flex-direction: column; background: #000; }
           
-          /* 데스크탑에서 비율 유지 및 중앙 정렬 */
           @media screen and (min-width: 1025px) {
             .portrait-lock-container { max-width: 450px; left: 50%; transform: translateX(-50%); border-left: 1px solid #333; border-right: 1px solid #333; }
           }
 
-          /* 국화 솟아오르는 애니메이션 정의 */
-          @keyframes flower-up {
-            0% { transform: translate(-50%, 80vh) scale(0.6); opacity: 0; }
+          /* 헌화 국화: 하단 정중앙에서 살짝 상승하며 사라지는 애니메이션 */
+          @keyframes flower-up-fade {
+            0% { transform: translate(-50%, 0) scale(0.7); opacity: 0; }
             20% { opacity: 1; }
-            100% { transform: translate(-50%, -20vh) scale(1.3); opacity: 0; }
+            100% { transform: translate(-50%, -150px) scale(1.1); opacity: 0; }
           }
-          .flower-up { position: absolute; left: 50%; bottom: 0; z-index: 100; pointer-events: none; animation: flower-up 3s ease-out forwards; }
+          .flower-up-fade { 
+            position: absolute; 
+            left: 50%; 
+            bottom: 25%; 
+            z-index: 100; 
+            pointer-events: none; 
+            animation: flower-up-fade 2.5s ease-out forwards; 
+          }
 
-          /* 방명록 모달 디자인 */
           .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7); display: flex; align-items: flex-end; justify-content: center; }
           .modal-content { width: 100%; max-width: 450px; height: 80%; background: #1a1a1a; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; }
           .modal-header { padding: 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; color: white; }
@@ -252,8 +251,6 @@ export default function MemorialApp() {
           .custom-hotspot-wrapper { width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 10px; overflow: hidden; position: relative; }
           .hotspot-img { width: 100%; height: 100%; object-fit: cover; }
           .hotspot-label { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); font-size: 10px; color: white; text-align: center; padding: 2px 0; }
-          .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 20px; opacity: 0.8; }
-          
           input::placeholder { color: #ccc; }
         `}</style>
       </div>
