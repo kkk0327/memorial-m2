@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Script from 'next/script';
-import { Flower2, Landmark, NotebookPen, X, Image as ImageIcon, Film, Gift, Send } from 'lucide-react';
+import { Flower2, Landmark, NotebookPen, X, Send } from 'lucide-react';
 
 export default function MemorialApp() {
-  const [flowerCount, setFlowerCount] = useState(1240);
   const [hasFlowered, setHasFlowered] = useState(false);
   const [activeMenu, setActiveMenu] = useState('main'); 
   const [galleryTab, setGalleryTab] = useState('picture'); 
@@ -39,19 +38,14 @@ export default function MemorialApp() {
       displayToast("이미 헌화하셨습니다. 따뜻한 마음 감사합니다.");
       return;
     }
-    setFlowerCount(prev => prev + 1);
     setHasFlowered(true);
     setIsFlowering(true);
+    // 2.5초 뒤에 꽃 애니메이션 제거
     setTimeout(() => setIsFlowering(false), 2500);
   };
 
-  const handleEnterGallery = () => {
-    setActiveMenu('gallery');
-  };
-
-  const handleTabChange = (tab) => {
-    setGalleryTab(tab);
-  };
+  const handleEnterGallery = () => setActiveMenu('gallery');
+  const handleTabChange = (tab) => setGalleryTab(tab);
 
   const handleGuestbookSubmit = (e) => {
     e.preventDefault();
@@ -69,16 +63,11 @@ export default function MemorialApp() {
 
   useEffect(() => {
     if (selectedContent && selectedContent.type === 'video' && popupVideoRef.current) {
-      const playPromise = popupVideoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => console.log("Auto-play prevented:", error));
-      }
+      popupVideoRef.current.play().catch(e => console.log("Auto-play error", e));
     }
   }, [selectedContent]);
 
   useEffect(() => {
-    window.scrollTo(0, 1);
-
     if (activeMenu === 'gallery' && isPannellumLoaded && !selectedContent && window.pannellum) {
       if (pannellumInstance.current) {
         try { pannellumInstance.current.destroy(); } catch(e) {}
@@ -118,15 +107,15 @@ export default function MemorialApp() {
         panorama: currentData.img,
         autoLoad: true,
         showControls: false,
-        hotSpots: (currentData.hotspots || []).map(hs => ({
+        hotSpots: currentData.hotspots.map(hs => ({
           pitch: hs.pitch,
           yaw: hs.yaw,
           cssClass: "custom-hotspot-wrapper",
           createTooltipFunc: (hotSpotDiv) => {
             if (hs.type === "photo") {
               hotSpotDiv.innerHTML = `<div class="hotspot-card"><img src="${hs.src}" class="hotspot-img" /><div class="hotspot-label">${hs.text}</div></div>`;
-            } else if (hs.type === "video") {
-              hotSpotDiv.innerHTML = `<div class="hotspot-card video-card"><video src="${hs.src}" muted autoplay loop playsinline webkit-playsinline onloadeddata="this.play();" class="hotspot-img"></video><div class="play-icon">▶</div><div class="hotspot-label">${hs.text}</div></div>`;
+            } else {
+              hotSpotDiv.innerHTML = `<div class="hotspot-card"><video src="${hs.src}" muted autoplay loop playsinline class="hotspot-img"></video><div class="play-icon">▶</div><div class="hotspot-label">${hs.text}</div></div>`;
             }
           },
           clickHandlerFunc: () => setSelectedContent(hs)
@@ -138,47 +127,41 @@ export default function MemorialApp() {
   return (
     <>
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
-      <Script 
-        src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"
-        strategy="afterInteractive"
-        onLoad={() => setIsPannellumLoaded(true)}
-      />
+      <Script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js" strategy="afterInteractive" onLoad={() => setIsPannellumLoaded(true)} />
       
-      <meta name="apple-mobile-web-app-capable" content="yes" />
-      <meta name="mobile-web-app-capable" content="yes" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-
       <div className="portrait-lock-container">
         {/* 메인 화면 */}
         {activeMenu === 'main' && (
           <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-            <img src="/images/main.jpg" alt="Main" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), transparent, rgba(0,0,0,0.3))', zIndex: 1 }} />
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div style={{ marginTop: '7vh', textAlign: 'center' }}>
-                <h1 style={{ fontFamily: "'Noto Serif KR', serif", fontSize: '4.5rem', fontWeight: '700', color: '#1a1a1a', marginBottom: '-1.4rem' }}>추모관</h1>
-                <p style={{ fontFamily: "'Noto Serif KR', serif", fontSize: '1.35rem', color: '#333' }}>영원한 안식, 함께 기억합니다</p>
-              </div>
-              <div style={{ marginBottom: '6vh' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', maxWidth: '400px', margin: '0 auto' }}>
-                  <button onClick={handleFlower} style={{ background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Flower2 size={38} color="white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />
-                    <span style={{ color: 'white', fontSize: '0.9rem', marginTop: '4px', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>헌화</span>
-                  </button>
-                  <button onClick={handleEnterGallery} style={{ background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Landmark size={42} color="white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />
-                    <span style={{ color: 'white', fontSize: '0.9rem', marginTop: '4px', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>추모관</span>
-                  </button>
-                  <button onClick={() => setShowGuestbook(true)} style={{ background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <NotebookPen size={38} color="white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />
-                    <span style={{ color: 'white', fontSize: '0.9rem', marginTop: '4px', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>방명록</span>
-                  </button>
-                </div>
+            <img src="/images/main.jpg" alt="Main" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), transparent, rgba(0,0,0,0.5))' }} />
+            
+            <div style={{ position: 'absolute', top: '10vh', width: '100%', textAlign: 'center', zIndex: 10 }}>
+              <h1 style={{ fontFamily: "'Noto Serif KR', serif", fontSize: '4rem', fontWeight: '700', color: '#1a1a1a', margin: 0 }}>추모관</h1>
+              <p style={{ fontFamily: "'Noto Serif KR', serif", fontSize: '1.2rem', color: '#333' }}>영원한 안식, 함께 기억합니다</p>
+            </div>
+
+            <div style={{ position: 'absolute', bottom: '8vh', width: '100%', zIndex: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-around', maxWidth: '400px', margin: '0 auto' }}>
+                <button onClick={handleFlower} style={{ background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <Flower2 size={35} color="white" />
+                  <span style={{ color: 'white', fontSize: '0.85rem', marginTop: '5px' }}>헌화</span>
+                </button>
+                <button onClick={handleEnterGallery} style={{ background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <Landmark size={38} color="white" />
+                  <span style={{ color: 'white', fontSize: '0.85rem', marginTop: '5px' }}>추모관</span>
+                </button>
+                <button onClick={() => setShowGuestbook(true)} style={{ background: 'none', border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <NotebookPen size={35} color="white" />
+                  <span style={{ color: 'white', fontSize: '0.85rem', marginTop: '5px' }}>방명록</span>
+                </button>
               </div>
             </div>
+
+            {/* 국화 애니메이션 */}
             {isFlowering && (
-              <div className="flower-animation" style={{ position: 'absolute', left: '50%', bottom: '20%', transform: 'translateX(-50%)', zIndex: 20 }}>
-                <img src="/images/guk.png" alt="헌화" style={{ width: '100px', filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.9)) drop-shadow(0 0 6px rgba(255,215,0,0.6))' }} />
+              <div className="flower-up">
+                <img src="/images/guk.png" alt="꽃" style={{ width: '100px', filter: 'drop-shadow(0 0 10px gold)' }} />
               </div>
             )}
           </div>
@@ -186,111 +169,113 @@ export default function MemorialApp() {
 
         {/* 방명록 모달 */}
         {showGuestbook && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 90, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setShowGuestbook(false)}>
-            <div style={{ width: '100%', maxWidth: '450px', height: '85%', backgroundColor: '#1a1a1a', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
-              <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #333' }}>
-                <h2 style={{ color: 'white', margin: 0 }}>방명록</h2>
-                <button onClick={() => setShowGuestbook(false)} style={{ background: 'none', border: 'none', color: 'white' }}><X /></button>
+          <div className="modal-overlay" onClick={() => setShowGuestbook(false)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>방명록</h3>
+                <button onClick={() => setShowGuestbook(false)}><X /></button>
               </div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+              <div className="guestbook-list">
                 {guestbookList.map(item => (
-                  <div key={item.id} style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: '1px solid #333' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fbbf24', fontSize: '0.9rem' }}>
-                      <span>{item.name}</span><span>{item.date}</span>
-                    </div>
-                    <p style={{ color: 'white', marginTop: '5px' }}>{item.msg}</p>
+                  <div key={item.id} className="guestbook-item">
+                    <div className="item-info"><span>{item.name}</span><small>{item.date}</small></div>
+                    <p>{item.msg}</p>
                   </div>
                 ))}
               </div>
-              <form onSubmit={handleGuestbookSubmit} style={{ padding: '20px', background: '#111' }}>
-                <input type="text" placeholder="이름" value={inputName} onChange={e => setInputName(e.target.value)} style={{ width: '100%', padding: '10px', background: '#333', border: 'none', color: 'white', marginBottom: '10px', borderRadius: '8px' }} />
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <input type="text" placeholder="추모의 글을 남겨주세요." value={inputMsg} onChange={e => setInputMsg(e.target.value)} style={{ flex: 1, padding: '10px', background: '#333', border: 'none', color: 'white', borderRadius: '8px' }} />
-                  <button type="submit" style={{ padding: '10px 20px', background: '#fbbf24', border: 'none', borderRadius: '8px' }}><Send size={20} /></button>
+              <form onSubmit={handleGuestbookSubmit} className="guestbook-form">
+                <input type="text" placeholder="이름" value={inputName} onChange={e => setInputName(e.target.value)} maxLength={10} />
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input type="text" placeholder="마음을 남겨주세요" value={inputMsg} onChange={e => setInputMsg(e.target.value)} />
+                  <button type="submit"><Send size={18} /></button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* 갤러리 뷰 */}
+        {/* 사진관/영상관/유품관 뷰어 */}
         {activeMenu === 'gallery' && !selectedContent && (
-          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'black', zIndex: 50 }}>
+          <div className="viewer-container">
             <div ref={viewerRef} style={{ width: '100%', height: '100%' }} />
-            <div style={{ position: 'absolute', top: '2rem', width: '100%', display: 'flex', justifyContent: 'center', zIndex: 60 }}>
-              <div style={{ display: 'flex', gap: '5px', padding: '5px', background: 'rgba(0,0,0,0.5)', borderRadius: '99px' }}>
-                 {['picture', 'video', 'relics'].map((tab) => (
-                   <button key={tab} onClick={() => handleTabChange(tab)} style={{ padding: '8px 20px', borderRadius: '99px', border: 'none', color: 'white', background: galleryTab === tab ? 'rgba(255,255,255,0.3)' : 'transparent' }}>
-                     {tab === 'picture' ? '사진관' : tab === 'video' ? '영상관' : '유품관'}
-                   </button>
-                 ))}
-              </div>
+            <div className="tab-menu">
+              {['picture', 'video', 'relics'].map(tab => (
+                <button key={tab} onClick={() => handleTabChange(tab)} className={galleryTab === tab ? 'active' : ''}>
+                  {tab === 'picture' ? '사진관' : tab === 'video' ? '영상관' : '유품관'}
+                </button>
+              ))}
             </div>
-            <button onClick={() => setActiveMenu('main')} style={{ position: 'absolute', top: '2.2rem', right: '1.8rem', zIndex: 60, background: 'none', border: 'none', color: 'white' }}><X size={28} /></button>
+            <button className="close-btn" onClick={() => setActiveMenu('main')}><X size={30} /></button>
           </div>
         )}
 
-        {/* 상세 상세 상세 팝업 */}
+        {/* 상세 팝업 */}
         {selectedContent && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 100, backgroundColor: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <button onClick={() => setSelectedContent(null)} style={{ position: 'absolute', top: '2rem', right: '2rem', color: 'white', background: 'none', border: 'none' }}><X size={36} /></button>
-            <div style={{ maxWidth: '90%', maxHeight: '70vh' }}>
+          <div className="popup-overlay" onClick={() => setSelectedContent(null)}>
+            <div className="popup-content" onClick={e => e.stopPropagation()}>
               {selectedContent.type === 'video' ? (
-                <video ref={popupVideoRef} src={selectedContent.src} controls autoPlay muted playsInline style={{ width: '100%', borderRadius: '12px' }} />
+                <video src={selectedContent.src} controls autoPlay style={{ width: '100%' }} />
               ) : (
-                <img src={selectedContent.src} style={{ width: '100%', borderRadius: '12px' }} alt="Detail" />
+                <img src={selectedContent.src} style={{ width: '100%' }} alt="상세" />
               )}
+              <p>{selectedContent.text}</p>
+              <button className="popup-close" onClick={() => setSelectedContent(null)}><X size={30} /></button>
             </div>
-            <p style={{ marginTop: '20px', color: 'white', fontSize: '1.2rem' }}>{selectedContent.text}</p>
           </div>
         )}
+
+        {showToast && <div className="toast">{toastMessage}</div>}
 
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap');
-          body { margin: 0; padding: 0; background: #000; overflow: hidden; }
+          body { margin: 0; background: #000; overflow: hidden; }
+          .portrait-lock-container { position: fixed; inset: 0; display: flex; flex-direction: column; background: #000; }
           
-          input::placeholder { color: #ccc; }
-
-          /* 기본 컨테이너: 데스크탑 모바일 공통 */
-          .portrait-lock-container {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            display: flex; flex-direction: column; background: #000;
-          }
-
-          /* 데스크탑 환경 (너비 1025px 이상) */
+          /* 데스크탑에서 세로 모드 비율 유지 */
           @media screen and (min-width: 1025px) {
-            .portrait-lock-container {
-               max-width: 450px;
-               left: 50% !important;
-               transform: translateX(-50%) !important;
-               border-left: 1px solid #333;
-               border-right: 1px solid #333;
-            }
+            .portrait-lock-container { max-width: 450px; left: 50%; transform: translateX(-50%); border-left: 1px solid #333; border-right: 1px solid #333; }
           }
 
-          /* 모바일/태블릿 환경 (너비 1024px 이하) */
-          @media screen and (max-width: 1024px) {
-            /* 기기를 가로로 눕혔을 때만 회전 적용 */
-            @media screen and (orientation: landscape) {
-              .portrait-lock-container {
-                transform: rotate(-90deg) !important;
-                transform-origin: center !important;
-                width: 100vh !important;
-                height: 100vw !important;
-                left: 50% !important;
-                top: 50% !important;
-                margin-left: -50vh !important;
-                margin-top: -50vw !important;
-              }
-            }
+          /* 국화 솟아오르는 애니메이션 */
+          @keyframes flower-up {
+            0% { transform: translate(-50%, 100vh) scale(0.5); opacity: 0; }
+            30% { opacity: 1; }
+            100% { transform: translate(-50%, -100vh) scale(1.2); opacity: 0; }
           }
+          .flower-up { position: absolute; left: 50%; bottom: 0; z-index: 100; animation: flower-up 2.5s ease-out forwards; }
 
-          @keyframes fadeInOut { 0% { opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; } }
-          @keyframes floatAndFade { 0% { opacity: 0; transform: translate(-50%, 20px); } 100% { opacity: 0; transform: translate(-50%, -150px); } }
-          .flower-animation { animation: floatAndFade 2.5s ease-out forwards; }
-          .custom-hotspot-wrapper { width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 10px; overflow: hidden; }
+          /* 방명록 모달 스타일 */
+          .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7); display: flex; align-items: flex-end; justify-content: center; }
+          .modal-content { width: 100%; max-width: 450px; height: 80%; background: #1a1a1a; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; }
+          .modal-header { padding: 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; color: white; }
+          .modal-header button { background: none; border: none; color: white; }
+          .guestbook-list { flex: 1; overflow-y: auto; padding: 20px; }
+          .guestbook-item { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #2a2a2a; }
+          .item-info { display: flex; justify-content: space-between; color: #fbbf24; font-size: 0.9rem; margin-bottom: 5px; }
+          .item-info small { color: #888; }
+          .guestbook-item p { color: #eee; margin: 0; font-weight: 300; }
+          .guestbook-form { padding: 20px; background: #111; display: flex; flex-direction: column; gap: 10px; }
+          .guestbook-form input { padding: 12px; border-radius: 8px; border: none; background: #333; color: white; }
+          .guestbook-form button { padding: 12px; background: #fbbf24; border: none; border-radius: 8px; font-weight: bold; }
+
+          /* 뷰어 스타일 */
+          .viewer-container { position: fixed; inset: 0; z-index: 50; }
+          .tab-menu { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 60; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 30px; }
+          .tab-menu button { padding: 8px 15px; border-radius: 20px; border: none; color: white; background: none; font-size: 0.8rem; }
+          .tab-menu button.active { background: rgba(255,255,255,0.3); font-weight: bold; }
+          .close-btn { position: absolute; top: 30px; right: 20px; z-index: 60; color: white; background: none; border: none; }
+
+          /* 팝업 스타일 */
+          .popup-overlay { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; padding: 20px; }
+          .popup-content { position: relative; width: 100%; max-width: 400px; text-align: center; color: white; }
+          .popup-close { position: absolute; top: -50px; right: 0; background: none; border: none; color: white; }
+          
+          /* 공통 요소 */
+          .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 15px 30px; border-radius: 30px; z-index: 500; }
+          .custom-hotspot-wrapper { width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 10px; overflow: hidden; position: relative; }
           .hotspot-img { width: 100%; height: 100%; object-fit: cover; }
-          .hotspot-label { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); color: white; font-size: 10px; text-align: center; }
+          .hotspot-label { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); font-size: 10px; color: white; text-align: center; padding: 2px 0; }
+          .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 20px; opacity: 0.8; }
         `}</style>
       </div>
     </>
