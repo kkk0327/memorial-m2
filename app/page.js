@@ -40,8 +40,8 @@ export default function MemorialApp() {
     }
     setHasFlowered(true);
     setIsFlowering(true);
-    // 2.5초 뒤에 꽃 애니메이션 제거
-    setTimeout(() => setIsFlowering(false), 2500);
+    // 3초 후 꽃 이미지를 사라지게 함
+    setTimeout(() => setIsFlowering(false), 3000);
   };
 
   const handleEnterGallery = () => setActiveMenu('gallery');
@@ -60,12 +60,6 @@ export default function MemorialApp() {
     setInputMsg("");
     displayToast("방명록이 등록되었습니다.");
   };
-
-  useEffect(() => {
-    if (selectedContent && selectedContent.type === 'video' && popupVideoRef.current) {
-      popupVideoRef.current.play().catch(e => console.log("Auto-play error", e));
-    }
-  }, [selectedContent]);
 
   useEffect(() => {
     if (activeMenu === 'gallery' && isPannellumLoaded && !selectedContent && window.pannellum) {
@@ -158,10 +152,10 @@ export default function MemorialApp() {
               </div>
             </div>
 
-            {/* 국화 애니메이션 */}
+            {/* 국화 애니메이션 복구 */}
             {isFlowering && (
               <div className="flower-up">
-                <img src="/images/guk.png" alt="꽃" style={{ width: '100px', filter: 'drop-shadow(0 0 10px gold)' }} />
+                <img src="/images/guk.png" alt="꽃" style={{ width: '120px', filter: 'drop-shadow(0 0 10px rgba(255,215,0,0.6)) drop-shadow(0 0 2px white)' }} />
               </div>
             )}
           </div>
@@ -173,7 +167,7 @@ export default function MemorialApp() {
             <div className="modal-content" onClick={e => e.stopPropagation()}>
               <div className="modal-header">
                 <h3>방명록</h3>
-                <button onClick={() => setShowGuestbook(false)}><X /></button>
+                <button onClick={() => setShowGuestbook(false)} style={{ background: 'none', border: 'none', color: 'white' }}><X /></button>
               </div>
               <div className="guestbook-list">
                 {guestbookList.map(item => (
@@ -184,98 +178,83 @@ export default function MemorialApp() {
                 ))}
               </div>
               <form onSubmit={handleGuestbookSubmit} className="guestbook-form">
-                <input type="text" placeholder="이름" value={inputName} onChange={e => setInputName(e.target.value)} maxLength={10} />
+                <input type="text" placeholder="이름" value={inputName} onChange={e => setInputName(e.target.value)} maxLength={10} style={{ backgroundColor: '#333', color: 'white', border: 'none', padding: '10px', borderRadius: '8px' }} />
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <input type="text" placeholder="마음을 남겨주세요" value={inputMsg} onChange={e => setInputMsg(e.target.value)} />
-                  <button type="submit"><Send size={18} /></button>
+                  <input type="text" placeholder="마음을 남겨주세요" value={inputMsg} onChange={e => setInputMsg(e.target.value)} style={{ flex: 1, backgroundColor: '#333', color: 'white', border: 'none', padding: '10px', borderRadius: '8px' }} />
+                  <button type="submit" style={{ backgroundColor: '#fbbf24', border: 'none', padding: '10px 15px', borderRadius: '8px' }}><Send size={18} /></button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* 사진관/영상관/유품관 뷰어 */}
+        {/* 갤러리 뷰어 */}
         {activeMenu === 'gallery' && !selectedContent && (
-          <div className="viewer-container">
+          <div className="viewer-container" style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
             <div ref={viewerRef} style={{ width: '100%', height: '100%' }} />
-            <div className="tab-menu">
+            <div className="tab-menu" style={{ position: 'absolute', top: '30px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '10px', zIndex: 60, background: 'rgba(0,0,0,0.5)', padding: '5px', borderRadius: '30px' }}>
               {['picture', 'video', 'relics'].map(tab => (
-                <button key={tab} onClick={() => handleTabChange(tab)} className={galleryTab === tab ? 'active' : ''}>
+                <button key={tab} onClick={() => handleTabChange(tab)} style={{ padding: '8px 15px', borderRadius: '20px', border: 'none', color: 'white', background: galleryTab === tab ? 'rgba(255,255,255,0.3)' : 'transparent', fontSize: '0.8rem' }}>
                   {tab === 'picture' ? '사진관' : tab === 'video' ? '영상관' : '유품관'}
                 </button>
               ))}
             </div>
-            <button className="close-btn" onClick={() => setActiveMenu('main')}><X size={30} /></button>
+            <button style={{ position: 'absolute', top: '30px', right: '20px', zIndex: 60, color: 'white', background: 'none', border: 'none' }} onClick={() => setActiveMenu('main')}><X size={30} /></button>
           </div>
         )}
 
         {/* 상세 팝업 */}
         {selectedContent && (
-          <div className="popup-overlay" onClick={() => setSelectedContent(null)}>
-            <div className="popup-content" onClick={e => e.stopPropagation()}>
+          <div className="popup-overlay" style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setSelectedContent(null)}>
+            <div className="popup-content" style={{ position: 'relative', width: '100%', maxWidth: '400px', textAlign: 'center', color: 'white' }} onClick={e => e.stopPropagation()}>
               {selectedContent.type === 'video' ? (
-                <video src={selectedContent.src} controls autoPlay style={{ width: '100%' }} />
+                <video src={selectedContent.src} controls autoPlay muted playsInline style={{ width: '100%', borderRadius: '12px' }} />
               ) : (
-                <img src={selectedContent.src} style={{ width: '100%' }} alt="상세" />
+                <img src={selectedContent.src} style={{ width: '100%', borderRadius: '12px' }} alt="상세" />
               )}
-              <p>{selectedContent.text}</p>
-              <button className="popup-close" onClick={() => setSelectedContent(null)}><X size={30} /></button>
+              <p style={{ marginTop: '20px', fontSize: '1.1rem' }}>{selectedContent.text}</p>
+              <button style={{ position: 'absolute', top: '-50px', right: 0, background: 'none', border: 'none', color: 'white' }} onClick={() => setSelectedContent(null)}><X size={30} /></button>
             </div>
           </div>
         )}
 
-        {showToast && <div className="toast">{toastMessage}</div>}
+        {showToast && <div className="toast" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '15px 30px', borderRadius: '30px', zIndex: 500 }}>{toastMessage}</div>}
 
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap');
           body { margin: 0; background: #000; overflow: hidden; }
           .portrait-lock-container { position: fixed; inset: 0; display: flex; flex-direction: column; background: #000; }
           
-          /* 데스크탑에서 세로 모드 비율 유지 */
+          /* 데스크탑에서 비율 유지 및 중앙 정렬 */
           @media screen and (min-width: 1025px) {
             .portrait-lock-container { max-width: 450px; left: 50%; transform: translateX(-50%); border-left: 1px solid #333; border-right: 1px solid #333; }
           }
 
-          /* 국화 솟아오르는 애니메이션 */
+          /* 국화 솟아오르는 애니메이션 정의 */
           @keyframes flower-up {
-            0% { transform: translate(-50%, 100vh) scale(0.5); opacity: 0; }
-            30% { opacity: 1; }
-            100% { transform: translate(-50%, -100vh) scale(1.2); opacity: 0; }
+            0% { transform: translate(-50%, 80vh) scale(0.6); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translate(-50%, -20vh) scale(1.3); opacity: 0; }
           }
-          .flower-up { position: absolute; left: 50%; bottom: 0; z-index: 100; animation: flower-up 2.5s ease-out forwards; }
+          .flower-up { position: absolute; left: 50%; bottom: 0; z-index: 100; pointer-events: none; animation: flower-up 3s ease-out forwards; }
 
-          /* 방명록 모달 스타일 */
+          /* 방명록 모달 디자인 */
           .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7); display: flex; align-items: flex-end; justify-content: center; }
           .modal-content { width: 100%; max-width: 450px; height: 80%; background: #1a1a1a; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; }
           .modal-header { padding: 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; color: white; }
-          .modal-header button { background: none; border: none; color: white; }
           .guestbook-list { flex: 1; overflow-y: auto; padding: 20px; }
           .guestbook-item { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #2a2a2a; }
           .item-info { display: flex; justify-content: space-between; color: #fbbf24; font-size: 0.9rem; margin-bottom: 5px; }
           .item-info small { color: #888; }
-          .guestbook-item p { color: #eee; margin: 0; font-weight: 300; }
+          .guestbook-item p { color: #eee; margin: 0; }
           .guestbook-form { padding: 20px; background: #111; display: flex; flex-direction: column; gap: 10px; }
-          .guestbook-form input { padding: 12px; border-radius: 8px; border: none; background: #333; color: white; }
-          .guestbook-form button { padding: 12px; background: #fbbf24; border: none; border-radius: 8px; font-weight: bold; }
-
-          /* 뷰어 스타일 */
-          .viewer-container { position: fixed; inset: 0; z-index: 50; }
-          .tab-menu { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 60; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 30px; }
-          .tab-menu button { padding: 8px 15px; border-radius: 20px; border: none; color: white; background: none; font-size: 0.8rem; }
-          .tab-menu button.active { background: rgba(255,255,255,0.3); font-weight: bold; }
-          .close-btn { position: absolute; top: 30px; right: 20px; z-index: 60; color: white; background: none; border: none; }
-
-          /* 팝업 스타일 */
-          .popup-overlay { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; padding: 20px; }
-          .popup-content { position: relative; width: 100%; max-width: 400px; text-align: center; color: white; }
-          .popup-close { position: absolute; top: -50px; right: 0; background: none; border: none; color: white; }
           
-          /* 공통 요소 */
-          .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 15px 30px; border-radius: 30px; z-index: 500; }
           .custom-hotspot-wrapper { width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 10px; overflow: hidden; position: relative; }
           .hotspot-img { width: 100%; height: 100%; object-fit: cover; }
           .hotspot-label { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); font-size: 10px; color: white; text-align: center; padding: 2px 0; }
           .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 20px; opacity: 0.8; }
+          
+          input::placeholder { color: #ccc; }
         `}</style>
       </div>
     </>
