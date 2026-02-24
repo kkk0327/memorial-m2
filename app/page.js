@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Script from 'next/script';
 import { Flower2, Landmark, NotebookPen, X, Send } from 'lucide-react';
 
-// === 생략 없는 100% 완전한 공간 데이터 설정 ===
+// === 공간 데이터 설정 (길거리 2번 좌표 수정 포함) ===
 const SCENE_CONFIG = {
   'Panorama01': { 
     isOutdoor: true, 
@@ -15,7 +15,7 @@ const SCENE_CONFIG = {
       { type: 'room', target: 'office', text: '오피스', pitch: 4, yaw: 32 },
       { type: 'room', target: 'dis', text: '전시관', pitch: 3, yaw: 55 },
       { type: 'room', target: 'jip', text: '집회장', pitch: -8, yaw: 45 },
-      { type: 'nav', target: 'Panorama02', color: '#ef4444', pitch: -20, yaw: -12, targetYaw: 0 }
+      { type: 'nav', target: 'Panorama02', color: '#ef4444', pitch: -22, yaw: -12, targetYaw: 0 }
     ]
   },
   'Panorama02': { 
@@ -25,9 +25,10 @@ const SCENE_CONFIG = {
       { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 10, yaw: -50 },
       { type: 'room', target: 'res', text: '레스토랑', pitch: 0, yaw: -45 },
       { type: 'room', target: 'bong02', text: '봉안당 2', pitch: 8, yaw: 12 }, 
-      { type: 'room', target: 'office', text: '오피스', pitch: 8, yaw: 35 },
-      { type: 'room', target: 'dis', text: '전시관', pitch: 8, yaw: 50 },
-      { type: 'room', target: 'jip', text: '집회장', pitch: -2, yaw: 45 },
+      // [수정] 사진 지침에 따라 오피스, 전시관, 집회장 위치 이동
+      { type: 'room', target: 'office', text: '오피스', pitch: 6, yaw: 45 },
+      { type: 'room', target: 'dis', text: '전시관', pitch: 5, yaw: 55 },
+      { type: 'room', target: 'jip', text: '집회장', pitch: 3, yaw: 50 },
       { type: 'nav', target: 'Panorama03', color: '#ef4444', pitch: -16, yaw: 0, targetYaw: 0 }, 
       { type: 'nav', target: 'Panorama01', color: '#3b82f6', pitch: -25, yaw: 0, targetYaw: 180, isReverse: true } 
     ]
@@ -85,7 +86,7 @@ const SCENE_CONFIG = {
       { type: 'nav', target: 'Panorama07', color: '#3b82f6', pitch: -20, yaw: 0, targetYaw: -150, isReverse: true }
     ]
   },
-  // === 실내 공간 (제목 노출) ===
+  // === 실내 공간 ===
   'res': { title: '레스토랑', img: '/images/res.jpg', hotspots: [] },
   'office': { title: '오피스', img: '/images/office.jpg', hotspots: [] },
   'dis': { title: '전시관', img: '/images/dis.jpg', hotspots: [] },
@@ -110,7 +111,7 @@ const SCENE_CONFIG = {
 export default function MemorialApp() {
   const [activeMenu, setActiveMenu] = useState('main');
   const [currentScene, setCurrentScene] = useState('Panorama01');
-  const [lastOutdoorScene, setLastOutdoorScene] = useState('Panorama01'); // 직전 길거리 기억
+  const [lastOutdoorScene, setLastOutdoorScene] = useState('Panorama01');
   const [initView, setInitView] = useState({ pitch: 0, yaw: 0 });
   const [isPannellumLoaded, setIsPannellumLoaded] = useState(false);
   const [hasFlowered, setHasFlowered] = useState(false);
@@ -121,22 +122,17 @@ export default function MemorialApp() {
   const viewerRef = useRef(null);
   const pannellumInstance = useRef(null);
 
-  // === 스마트 복귀 로직 ===
   const handleExit = () => {
     if (SCENE_CONFIG[currentScene]?.isOutdoor) {
-      // 길거리 화면이면 X 누를 때 메인 화면으로
       setActiveMenu('main');
     } else if (currentScene === 'family' || currentScene === 'per') {
-      // 가족추모실, 개인추모실이면 봉안당3으로 먼저 복귀
       setCurrentScene('bong03');
     } else {
-      // 그 외 일반 실내면 들어왔던 길거리로 정확히 복귀
       setCurrentScene(lastOutdoorScene);
     }
   };
 
   const handleHotspotClick = (hs) => {
-    // 실내로 진입할 때만 현재 길거리 화면 번호를 저장합니다.
     if (SCENE_CONFIG[currentScene]?.isOutdoor && !SCENE_CONFIG[hs.target]?.isOutdoor) {
       setLastOutdoorScene(currentScene);
     }
@@ -151,13 +147,13 @@ export default function MemorialApp() {
       pannellumInstance.current = window.pannellum.viewer(viewerRef.current, {
         type: "equirectangular", panorama: data.img,
         pitch: initView.pitch, yaw: initView.yaw,
+        hfov: 120, maxHfov: 120, minHfov: 50,
         autoLoad: true, showControls: false,
         hotSpots: (data.hotspots || []).map(hs => ({
           pitch: hs.pitch, yaw: hs.yaw,
           cssClass: "custom-hotspot",
           createTooltipFunc: (div) => {
             if (hs.type === 'nav') { 
-              // isReverse가 true면 화살표를 180도 뒤집어서 출력
               const rotation = hs.isReverse ? 'rotate(180deg)' : 'rotate(0deg)';
               div.innerHTML = `<div class="road-arrow-3d" style="background-color:${hs.color}; transform: translate(-50%, -50%) rotateX(65deg) ${rotation};"></div>`; 
             } else { 
@@ -170,6 +166,7 @@ export default function MemorialApp() {
     }
   }, [activeMenu, currentScene, isPannellumLoaded, initView]);
 
+  // ... (하단 return JSX 및 스타일은 이전과 동일하여 생략하지 않고 전체 포함)
   return (
     <div className="app-container">
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
@@ -201,7 +198,6 @@ export default function MemorialApp() {
       {activeMenu === 'gallery' && (
         <div className="gallery-full-viewport">
           <div ref={viewerRef} className="viewer-canvas" />
-          {/* 야외(isOutdoor)가 아닐 때만 제목 표시 */}
           {!SCENE_CONFIG[currentScene]?.isOutdoor && (
             <div className="scene-title-badge">{SCENE_CONFIG[currentScene]?.title}</div>
           )}
@@ -231,7 +227,6 @@ export default function MemorialApp() {
         .scene-title-badge { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); border: 2px solid #ef4444; color: white; padding: 10px 30px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; z-index: 110; }
         .exit-button { position: absolute; top: 30px; right: 30px; z-index: 110; background: rgba(0,0,0,0.5); border: 1px solid #fff; border-radius: 50%; width: 50px; height: 50px; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-        /* 화살표와 텍스트 태그 z-index 추가 및 pointer-events 명시 */
         .custom-hotspot { z-index: 100; pointer-events: auto; }
         
         .road-arrow-3d { 
