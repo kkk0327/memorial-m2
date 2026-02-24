@@ -4,15 +4,126 @@ import React, { useState, useEffect, useRef } from 'react';
 import Script from 'next/script';
 import { Flower2, Landmark, NotebookPen, X, Send } from 'lucide-react';
 
+// === [파노라마 씬 설정] ===
+// pitch(상하 각도), yaw(좌우 각도)는 기본값으로 임의 배치되어 있습니다.
+// 실제 이미지에 맞게 이 수치들을 나중에 조금씩 수정하시면 됩니다.
+const SCENE_CONFIG = {
+  'Panorama01': {
+    img: '/images/Panorama01.png',
+    hotspots: [
+      { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 5, yaw: -40 },
+      { type: 'room', target: 'res', text: '레스토랑', pitch: 5, yaw: -20 },
+      { type: 'room', target: 'office', text: '오피스', pitch: 5, yaw: 20 },
+      { type: 'room', target: 'dis', text: '전시관', pitch: 5, yaw: 40 },
+      { type: 'room', target: 'jip', text: '집회장', pitch: 5, yaw: 60 },
+      { type: 'nav', target: 'Panorama02', color: '#ef4444', symbol: '▲', pitch: -10, yaw: 0, targetPitch: 0, targetYaw: 0 } // 빨간 화살표 (직진)
+    ]
+  },
+  'Panorama02': {
+    img: '/images/Panorama02.png',
+    hotspots: [
+      { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 5, yaw: -45 },
+      { type: 'room', target: 'res', text: '레스토랑', pitch: 5, yaw: -30 },
+      { type: 'room', target: 'bong02', text: '봉안당 2', pitch: 5, yaw: -15 },
+      { type: 'room', target: 'office', text: '오피스', pitch: 5, yaw: 15 },
+      { type: 'room', target: 'dis', text: '전시관', pitch: 5, yaw: 30 },
+      { type: 'room', target: 'jip', text: '집회장', pitch: 5, yaw: 45 },
+      { type: 'nav', target: 'Panorama03', color: '#ef4444', symbol: '▲', pitch: -10, yaw: 0, targetPitch: 0, targetYaw: 0 }, // 빨간 화살표 (직진)
+      { type: 'nav', target: 'Panorama01', color: '#3b82f6', symbol: '▼', pitch: -10, yaw: 180, targetPitch: 0, targetYaw: 180 } // 파란 화살표 (뒤로)
+    ]
+  },
+  'Panorama03': {
+    img: '/images/Panorama03.png',
+    hotspots: [
+      { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 5, yaw: -30 },
+      { type: 'room', target: 'res', text: '레스토랑', pitch: 5, yaw: -15 },
+      { type: 'room', target: 'bong02', text: '봉안당 2', pitch: 5, yaw: 15 },
+      { type: 'nav', target: 'Panorama04', color: '#ef4444', symbol: '▲', pitch: -10, yaw: 0, targetPitch: 0, targetYaw: 0 }, 
+      { type: 'nav', target: 'Panorama02', color: '#3b82f6', symbol: '▼', pitch: -10, yaw: 180, targetPitch: 0, targetYaw: 180 }
+    ]
+  },
+  'Panorama04': {
+    img: '/images/Panorama04.png',
+    hotspots: [
+      { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 5, yaw: -20 },
+      { type: 'room', target: 'bong02', text: '봉안당 2', pitch: 5, yaw: 20 },
+      { type: 'nav', target: 'Panorama05', color: '#ef4444', symbol: '▲', pitch: -10, yaw: 0, targetPitch: 0, targetYaw: 0 }, 
+      { type: 'nav', target: 'Panorama03', color: '#3b82f6', symbol: '▼', pitch: -10, yaw: 180, targetPitch: 0, targetYaw: 180 }
+    ]
+  },
+  'Panorama05': {
+    img: '/images/Panorama05.png',
+    hotspots: [
+      { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 5, yaw: -45 },
+      { type: 'room', target: 'res', text: '레스토랑', pitch: 5, yaw: -30 },
+      { type: 'room', target: 'bong02', text: '봉안당 2', pitch: 5, yaw: -15 },
+      { type: 'room', target: 'bong03', text: '봉안당 3', pitch: 5, yaw: 15 },
+      { type: 'nav', target: 'Panorama07', color: '#ef4444', symbol: '▲', pitch: -10, yaw: 30, targetPitch: 0, targetYaw: 0 }, // 우측 대각선 직진
+      { type: 'nav', target: 'Panorama06', color: '#10b981', symbol: '▲', pitch: -10, yaw: -30, targetPitch: 0, targetYaw: 0 }, // 좌측 대각선 분기점(녹색)
+      { type: 'nav', target: 'Panorama04', color: '#3b82f6', symbol: '▼', pitch: -10, yaw: 180, targetPitch: 0, targetYaw: 180 }
+    ]
+  },
+  'Panorama06': {
+    img: '/images/Panorama06.png',
+    hotspots: [
+      { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 5, yaw: -45 },
+      { type: 'room', target: 'res', text: '레스토랑', pitch: 5, yaw: -15 },
+      { type: 'room', target: 'bong03', text: '봉안당 3', pitch: 5, yaw: 15 },
+      { type: 'room', target: 'cafe', text: '카페', pitch: 5, yaw: 45 },
+      { type: 'nav', target: 'Panorama05', color: '#3b82f6', symbol: '▼', pitch: -10, yaw: 180, targetPitch: 0, targetYaw: 180 }
+    ]
+  },
+  'Panorama07': {
+    img: '/images/Panorama07.png',
+    hotspots: [
+      { type: 'room', target: 'bong02', text: '봉안당 2', pitch: 5, yaw: -20 },
+      { type: 'room', target: 'bong03', text: '봉안당 3', pitch: 5, yaw: 20 },
+      { type: 'nav', target: 'Panorama08', color: '#ef4444', symbol: '▲', pitch: -10, yaw: 0, targetPitch: 0, targetYaw: 0 }, 
+      { type: 'nav', target: 'Panorama05', color: '#3b82f6', symbol: '▼', pitch: -10, yaw: 180, targetPitch: 0, targetYaw: 180 }
+    ]
+  },
+  'Panorama08': {
+    img: '/images/Panorama08.png',
+    hotspots: [
+      { type: 'room', target: 'hotel', text: '호텔', pitch: 5, yaw: -20 },
+      { type: 'room', target: 'pat', text: '팻시설', pitch: 5, yaw: 20 },
+      { type: 'nav', target: 'Panorama07', color: '#3b82f6', symbol: '▼', pitch: -10, yaw: 180, targetPitch: 0, targetYaw: 180 }
+    ]
+  },
+  // === [세부 공간 (방)] ===
+  'bong01': { img: '/images/bong01.jpg', hotspots: [] },
+  'bong02': { img: '/images/bong02.jpg', hotspots: [] },
+  'bong03': { 
+    img: '/images/bong03.jpg', 
+    hotspots: [
+      { type: 'room', target: 'family', text: '가족추모실', pitch: 5, yaw: -20 },
+      { type: 'room', target: 'per', text: '개인추모실', pitch: 5, yaw: 20 }
+    ] 
+  },
+  'res': { img: '/images/res.jpg', hotspots: [] },
+  'office': { img: '/images/office.jpg', hotspots: [] },
+  'dis': { img: '/images/dis.jpg', hotspots: [] },
+  'jip': { img: '/images/jip.jpg', hotspots: [] },
+  'cafe': { img: '/images/cafe.jpg', hotspots: [] },
+  'hotel': { img: '/images/hotel.jpg', hotspots: [] },
+  'pat': { img: '/images/pat.jpg', hotspots: [] },
+  'family': { img: '/images/family.jpg', hotspots: [] },
+  'per': { img: '/images/per.jpg', hotspots: [] }
+};
+
+
 export default function MemorialApp() {
   const [hasFlowered, setHasFlowered] = useState(false);
   const [activeMenu, setActiveMenu] = useState('main'); 
-  const [galleryTab, setGalleryTab] = useState('picture'); 
-  const [selectedContent, setSelectedContent] = useState(null); 
   const [isPannellumLoaded, setIsPannellumLoaded] = useState(false);
-  const [toastMessage, setToastMessage] = useState([]); // 줄바꿈을 위해 배열 처리
+  const [toastMessage, setToastMessage] = useState([]);
   const [showToast, setShowToast] = useState(false);
   const [isFlowering, setIsFlowering] = useState(false);
+  
+  // === 네비게이션 상태 ===
+  const [currentScene, setCurrentScene] = useState('Panorama01');
+  const [sceneHistory, setSceneHistory] = useState([]); // 이전 화면 히스토리 스택
+  const [initView, setInitView] = useState({ pitch: 0, yaw: 0 }); // 화면 이동 시 초기 시선 방향
   
   const [showGuestbook, setShowGuestbook] = useState(false);
   const [inputName, setInputName] = useState("");
@@ -25,7 +136,6 @@ export default function MemorialApp() {
   
   const viewerRef = useRef(null);
   const pannellumInstance = useRef(null);
-  const popupVideoRef = useRef(null);
 
   const displayToast = (msgArray) => {
     setToastMessage(msgArray);
@@ -43,8 +153,36 @@ export default function MemorialApp() {
     setTimeout(() => setIsFlowering(false), 2600);
   };
 
-  const handleEnterGallery = () => setActiveMenu('gallery');
-  const handleTabChange = (tab) => setGalleryTab(tab);
+  const handleEnterGallery = () => {
+    setCurrentScene('Panorama01');
+    setSceneHistory([]);
+    setInitView({ pitch: 0, yaw: 0 });
+    setActiveMenu('gallery');
+  };
+
+  const handleHotspotClick = (hs) => {
+    // 현재 보고 있는 시야각을 저장하고 이동
+    const currentPitch = pannellumInstance.current.getPitch();
+    const currentYaw = pannellumInstance.current.getYaw();
+    
+    setSceneHistory([...sceneHistory, { scene: currentScene, pitch: currentPitch, yaw: currentYaw }]);
+    
+    // 대상 씬의 초기 시야각 설정 (설정값이 없으면 0)
+    setInitView({ pitch: hs.targetPitch || 0, yaw: hs.targetYaw || 0 });
+    setCurrentScene(hs.target);
+  };
+
+  const handleBack = () => {
+    if (sceneHistory.length === 0) {
+      setActiveMenu('main'); // 히스토리가 없으면 메인으로 복귀
+    } else {
+      const historyCopy = [...sceneHistory];
+      const prev = historyCopy.pop(); // 직전 화면 꺼내기
+      setSceneHistory(historyCopy);
+      setInitView({ pitch: prev.pitch, yaw: prev.yaw }); // 돌아갈 땐 아까 보던 방향 그대로
+      setCurrentScene(prev.scene);
+    }
+  };
 
   const handleGuestbookSubmit = (e) => {
     e.preventDefault();
@@ -61,61 +199,36 @@ export default function MemorialApp() {
   };
 
   useEffect(() => {
-    if (activeMenu === 'gallery' && isPannellumLoaded && !selectedContent && window.pannellum) {
+    if (activeMenu === 'gallery' && isPannellumLoaded && window.pannellum) {
       if (pannellumInstance.current) {
         try { pannellumInstance.current.destroy(); } catch(e) {}
       }
 
-      const config = {
-        picture: { 
-          img: "/images/panorama_picture.jpg", 
-          hotspots: [
-            { pitch: -5, yaw: -30, type: "photo", text: "고인의 독사진", src: "/images/picture_01.jpg" },
-            { pitch: 5, yaw: 0, type: "photo", text: "가족들과 함께", src: "/images/picture_02.jpg" },
-            { pitch: -5, yaw: 30, type: "photo", text: "환한 미소", src: "/images/picture_03.jpg" }
-          ]
-        },
-        video: { 
-          img: "/images/panorama_video.jpg", 
-          hotspots: [
-            { pitch: 0, yaw: -20, type: "video", text: "규빗홍보영상", src: "/images/video_01.mp4" },
-            { pitch: 0, yaw: 20, type: "video", text: "과천농협", src: "/images/video_02.mp4" },
-            { pitch: 0, yaw: 55, type: "video", text: "전시실", src: "/images/video_03.mp4" }
-          ]
-        },
-        relics: { 
-          img: "/images/panorama_relics.jpg", 
-          hotspots: [
-            { pitch: -10, yaw: -30, type: "photo", text: "자주 사용하시던 가방", src: "/images/relics_01.jpg" },
-            { pitch: -10, yaw: 0, type: "photo", text: "도장", src: "/images/relics_02.jpg" },
-            { pitch: -10, yaw: 30, type: "photo", text: "안경, 안경집", src: "/images/relics_03.jpg" }
-          ]
-        }
-      };
-
-      const currentData = config[galleryTab];
+      const sceneData = SCENE_CONFIG[currentScene];
 
       pannellumInstance.current = window.pannellum.viewer(viewerRef.current, {
         type: "equirectangular",
-        panorama: currentData.img,
+        panorama: sceneData.img,
+        pitch: initView.pitch,
+        yaw: initView.yaw,
         autoLoad: true,
         showControls: false,
-        hotSpots: currentData.hotspots.map(hs => ({
+        hotSpots: (sceneData.hotspots || []).map(hs => ({
           pitch: hs.pitch,
           yaw: hs.yaw,
           cssClass: "custom-hotspot-wrapper",
           createTooltipFunc: (hotSpotDiv) => {
-            if (hs.type === "photo") {
-              hotSpotDiv.innerHTML = `<div class="hotspot-card"><img src="${hs.src}" class="hotspot-img" /><div class="hotspot-label">${hs.text}</div></div>`;
+            if (hs.type === 'nav') {
+              hotSpotDiv.innerHTML = `<div class="nav-arrow" style="color: ${hs.color}; text-shadow: 0 0 15px rgba(255,255,255,0.8);">${hs.symbol}</div>`;
             } else {
-              hotSpotDiv.innerHTML = `<div class="hotspot-card"><video src="${hs.src}" muted autoplay loop playsinline class="hotspot-img"></video><div class="play-icon">▶</div><div class="hotspot-label">${hs.text}</div></div>`;
+              hotSpotDiv.innerHTML = `<div class="room-box">${hs.text}</div>`;
             }
           },
-          clickHandlerFunc: () => setSelectedContent(hs)
+          clickHandlerFunc: () => handleHotspotClick(hs)
         }))
       });
     }
-  }, [activeMenu, galleryTab, selectedContent, isPannellumLoaded]);
+  }, [activeMenu, currentScene, isPannellumLoaded, initView]);
 
   return (
     <>
@@ -184,38 +297,24 @@ export default function MemorialApp() {
           </div>
         )}
 
-        {activeMenu === 'gallery' && !selectedContent && (
+        {activeMenu === 'gallery' && (
           <div className="viewer-container" style={{ position: 'fixed', inset: 0, zIndex: 50 }}>
             <div ref={viewerRef} style={{ width: '100%', height: '100%' }} />
-            <div className="tab-menu">
-              {['picture', 'video', 'relics'].map(tab => (
-                <button key={tab} onClick={() => handleTabChange(tab)} className={galleryTab === tab ? 'active' : ''}>
-                  {tab === 'picture' ? '사진관' : tab === 'video' ? '영상관' : '유품관'}
-                </button>
-              ))}
-            </div>
-            <button style={{ position: 'absolute', top: '30px', right: '20px', zIndex: 60, color: 'white', background: 'none', border: 'none' }} onClick={() => setActiveMenu('main')}><X size={30} /></button>
-          </div>
-        )}
-
-        {selectedContent && (
-          <div className="popup-overlay" style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setSelectedContent(null)}>
-            <div className="popup-content" style={{ position: 'relative', width: '100%', maxWidth: '400px', textAlign: 'center', color: 'white' }} onClick={e => e.stopPropagation()}>
-              {selectedContent.type === 'video' ? (
-                <video src={selectedContent.src} controls autoPlay muted playsInline style={{ width: '100%', borderRadius: '12px' }} />
-              ) : (
-                <img src={selectedContent.src} style={{ width: '100%', borderRadius: '12px' }} alt="상세" />
-              )}
-              <p style={{ marginTop: '20px', fontSize: '1.1rem' }}>{selectedContent.text}</p>
-              <button style={{ position: 'absolute', top: '-50px', right: 0, background: 'none', border: 'none', color: 'white' }} onClick={() => setSelectedContent(null)}><X size={30} /></button>
-            </div>
+            
+            {/* 뒤로 가기 / 닫기 공통 버튼 */}
+            <button 
+              style={{ position: 'absolute', top: '30px', right: '20px', zIndex: 60, color: 'white', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)' }} 
+              onClick={handleBack}
+            >
+              <X size={28} />
+            </button>
           </div>
         )}
 
         {showToast && (
           <div className="toast">
             {toastMessage.map((line, idx) => (
-              <div key={idx} style={{ fontSize: '0.95rem', marginBottom: idx === 0 && toastMessage.length > 1 ? '4px' : 0 }}>{line}</div>
+              <div key={idx} style={{ fontSize: '1rem', marginBottom: idx === 0 && toastMessage.length > 1 ? '4px' : 0 }}>{line}</div>
             ))}
           </div>
         )}
@@ -236,6 +335,35 @@ export default function MemorialApp() {
           }
           .flower-up-fade { position: absolute; left: 50%; bottom: 25%; z-index: 100; pointer-events: none; animation: flower-up-fade 2.5s ease-out forwards; }
 
+          /* 파노라마 핫스팟 (텍스트 방/시설 아이콘) 디자인 */
+          .room-box {
+            background-color: rgba(0, 0, 0, 0.65);
+            border: 2px solid #ef4444; /* 빨간색 테두리 */
+            border-radius: 8px;
+            color: white;
+            padding: 6px 14px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-align: center;
+            white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transform: translate(-50%, -50%);
+            transition: transform 0.2s;
+          }
+          .room-box:hover { transform: translate(-50%, -50%) scale(1.05); background-color: rgba(0, 0, 0, 0.8); }
+
+          /* 파노라마 핫스팟 (이동 화살표) 디자인 */
+          .nav-arrow {
+            font-size: 55px; /* 화살표 크기 */
+            line-height: 1;
+            transform: translate(-50%, -50%);
+            transition: transform 0.2s;
+            cursor: pointer;
+          }
+          .nav-arrow:hover { transform: translate(-50%, -50%) scale(1.15); }
+
+          .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 18px 38px; border-radius: 24px; z-index: 500; text-align: center; backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
           .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7); display: flex; align-items: flex-end; justify-content: center; }
           .modal-content { width: 100%; max-width: 450px; height: 80%; background: #1a1a1a; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; }
           .modal-header { padding: 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; color: white; }
@@ -243,14 +371,9 @@ export default function MemorialApp() {
           .guestbook-item { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #2a2a2a; }
           .item-info { display: flex; justify-content: space-between; color: #fbbf24; font-size: 0.9rem; margin-bottom: 5px; }
           .item-info small { color: #888; }
-          .guestbook-item p { color: #eee; margin: 0; }
+          .guestbook-item p { color: #eee; margin: 0; font-weight: 300; }
           .guestbook-form { padding: 20px; background: #111; display: flex; flex-direction: column; gap: 10px; }
           
-          .tab-menu { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 60; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
-          .tab-menu button { min-width: 75px; height: 36px; padding: 0 12px; border-radius: 20px; border: none; color: white; background: transparent; fontSize: 0.85rem; whiteSpace: nowrap; display: flex; alignItems: center; justifyContent: center; }
-          .tab-menu button.active { background: rgba(255,255,255,0.3); font-weight: bold; }
-
-          .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 15px 35px; border-radius: 20px; z-index: 500; text-align: center; backdrop-filter: blur(5px); }
           input::placeholder { color: #ccc; }
         `}</style>
       </div>
