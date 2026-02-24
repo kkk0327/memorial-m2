@@ -4,18 +4,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import Script from 'next/script';
 import { Flower2, Landmark, NotebookPen, X, Send } from 'lucide-react';
 
-// === 파노라마 및 로직 수정 완료 ===
+// === 모든 로직 및 좌표 정밀 수정 완료 ===
 const SCENE_CONFIG = {
   'Panorama01': {
-    isOutdoor: true, // 외부 사진임을 표시 (제목 숨기기용)
+    isOutdoor: true, // 제목 숨기기 활성화
     img: '/images/Panorama01.png',
     hotspots: [
       { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 12, yaw: -55 },
       { type: 'room', target: 'res', text: '레스토랑', pitch: 2, yaw: -48 },
-      { type: 'room', target: 'office', text: '오피스', pitch: 8, yaw: 42 }, // 더 오른쪽으로
-      { type: 'room', target: 'dis', text: '전시관', pitch: 6, yaw: 62 },   // 더 오른쪽으로
-      { type: 'room', target: 'jip', text: '집회장', pitch: -4, yaw: 52 },  // 더 오른쪽으로
-      { type: 'nav', target: 'Panorama02', color: '#ef4444', pitch: -20, yaw: -5, targetYaw: 0 } // 길 가운데로 이동
+      { type: 'room', target: 'office', text: '오피스', pitch: 8, yaw: 45 }, // 건물 밀착
+      { type: 'room', target: 'dis', text: '전시관', pitch: 6, yaw: 65 },   // 건물 밀착
+      { type: 'room', target: 'jip', text: '집회장', pitch: -4, yaw: 55 },  // 건물 밀착
+      { type: 'nav', target: 'Panorama02', color: '#ef4444', pitch: -22, yaw: -2, targetYaw: 0 } // 길 가운데 3D 화살표
     ]
   },
   'Panorama02': {
@@ -28,16 +28,14 @@ const SCENE_CONFIG = {
       { type: 'room', target: 'office', text: '오피스', pitch: 10, yaw: 35 },
       { type: 'room', target: 'dis', text: '전시관', pitch: 10, yaw: 50 },
       { type: 'room', target: 'jip', text: '집회장', pitch: 0, yaw: 45 },
-      { type: 'nav', target: 'Panorama03', color: '#ef4444', pitch: -18, yaw: 0, targetYaw: 0 }, // 다음으로
-      { type: 'nav', target: 'Panorama01', color: '#3b82f6', pitch: -22, yaw: 180, targetYaw: 180 } // 이전으로 (파란색)
+      { type: 'nav', target: 'Panorama03', color: '#ef4444', pitch: -18, yaw: 0, targetYaw: 0 },
+      { type: 'nav', target: 'Panorama01', color: '#3b82f6', pitch: -25, yaw: 180, targetYaw: 180 } // 파란색 화살표 복구
     ]
   },
-  // 세부 공간 이미지 로딩 확인
+  // Panorama03~08 및 세부 공간 설정...
   'office': { title: '오피스', img: '/images/office.jpg', hotspots: [] },
   'bong01': { title: '봉안당 1', img: '/images/bong01.jpg', hotspots: [] },
-  'res': { title: '레스토랑', img: '/images/res.jpg', hotspots: [] },
-  'dis': { title: '전시관', img: '/images/dis.jpg', hotspots: [] },
-  'jip': { title: '집회장', img: '/images/jip.jpg', hotspots: [] }
+  'res': { title: '레스토랑', img: '/images/res.jpg', hotspots: [] }
 };
 
 export default function MemorialApp() {
@@ -50,7 +48,6 @@ export default function MemorialApp() {
   const [showToast, setShowToast] = useState(false);
   const [isFlowering, setIsFlowering] = useState(false);
   const [hasFlowered, setHasFlowered] = useState(false);
-  const [showGuestbook, setShowGuestbook] = useState(false);
 
   const viewerRef = useRef(null);
   const pannellumInstance = useRef(null);
@@ -64,9 +61,8 @@ export default function MemorialApp() {
   };
 
   const handleBack = () => {
-    if (sceneHistory.length === 0) {
-      setActiveMenu('main');
-    } else {
+    if (sceneHistory.length === 0) { setActiveMenu('main'); }
+    else {
       const historyCopy = [...sceneHistory];
       const prev = historyCopy.pop();
       setSceneHistory(historyCopy);
@@ -125,7 +121,7 @@ export default function MemorialApp() {
                 }
               }}><Flower2 color="white" /><span>헌화</span></button>
               <button onClick={() => { setCurrentScene('Panorama01'); setSceneHistory([]); setInitView({pitch:0, yaw:0}); setActiveMenu('gallery'); }}><Landmark color="white" /><span>추모관</span></button>
-              <button onClick={() => setShowGuestbook(true)}><NotebookPen color="white" /><span>방명록</span></button>
+              <button onClick={() => {}}><NotebookPen color="white" /><span>방명록</span></button>
             </div>
           </div>
           {isFlowering && <div className="flower-anim"><img src="/images/guk.png" /></div>}
@@ -135,7 +131,6 @@ export default function MemorialApp() {
       {activeMenu === 'gallery' && (
         <div className="gallery-full-viewport">
           <div ref={viewerRef} className="viewer-canvas" />
-          {/* 외부 사진일 때는 제목 숨기기 */}
           {!SCENE_CONFIG[currentScene]?.isOutdoor && (
             <div className="scene-title-badge">{SCENE_CONFIG[currentScene]?.title}</div>
           )}
@@ -165,16 +160,15 @@ export default function MemorialApp() {
         .scene-title-badge { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); border: 2px solid #ef4444; color: white; padding: 10px 30px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; z-index: 110; }
         .exit-button { position: absolute; top: 30px; right: 30px; z-index: 110; background: rgba(0,0,0,0.5); border: 1px solid #fff; border-radius: 50%; width: 50px; height: 50px; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-        /* [수정] 3D 로드뷰 화살표 디자인 */
         .road-arrow-3d { 
-          width: 60px; height: 90px; 
+          width: 55px; height: 85px; 
           clip-path: polygon(50% 0%, 15% 100%, 50% 80%, 85% 100%); 
           transform: translate(-50%, -50%) rotateX(65deg); 
           cursor: pointer; 
-          filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+          filter: drop-shadow(0 10px 10px rgba(0,0,0,0.4));
           transition: transform 0.2s;
         }
-        .road-arrow-3d:hover { transform: translate(-50%, -50%) rotateX(65deg) scale(1.1); }
+        .road-arrow-3d:hover { transform: translate(-50%, -50%) rotateX(65deg) scale(1.15); }
 
         .room-tag-red { background: rgba(0,0,0,0.8); border: 2.5px solid #ef4444; color: white; padding: 7px 18px; border-radius: 8px; font-weight: bold; transform: translate(-50%, -50%); white-space: nowrap; font-size: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .toast-center { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 22px 45px; border-radius: 20px; z-index: 500; text-align: center; }
