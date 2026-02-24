@@ -4,18 +4,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import Script from 'next/script';
 import { Flower2, Landmark, NotebookPen, X, Send } from 'lucide-react';
 
-// === 리뉴얼된 파노라마 설정 (좌표 및 타이틀 적용) ===
+// === 리뉴얼된 파노라마 설정 (사용자 지정 파일만 사용) ===
 const SCENE_CONFIG = {
   'Panorama01': {
     title: '메인 광장',
     img: '/images/Panorama01.png',
     hotspots: [
-      { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 12, yaw: -55 }, // 더 왼쪽으로
-      { type: 'room', target: 'res', text: '레스토랑', pitch: 2, yaw: -48 },   // 겹치지 않게 아래로
-      { type: 'room', target: 'office', text: '오피스', pitch: 10, yaw: 35 },  // 건물 쪽으로
-      { type: 'room', target: 'dis', text: '전시관', pitch: 8, yaw: 55 },    // 건물 쪽으로
-      { type: 'room', target: 'jip', text: '집회장', pitch: -2, yaw: 45 },   // 건물 쪽으로
-      { type: 'nav', target: 'Panorama02', color: '#ef4444', pitch: -18, yaw: -2, targetYaw: 0 } // 길 방향 3D 화살표
+      { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 12, yaw: -55 },
+      { type: 'room', target: 'res', text: '레스토랑', pitch: 2, yaw: -48 },
+      { type: 'room', target: 'office', text: '오피스', pitch: 10, yaw: 35 },
+      { type: 'room', target: 'dis', text: '전시관', pitch: 8, yaw: 55 },
+      { type: 'room', target: 'jip', text: '집회장', pitch: -2, yaw: 45 },
+      { type: 'nav', target: 'Panorama02', color: '#ef4444', pitch: -18, yaw: -2, targetYaw: 0 }
     ]
   },
   'Panorama02': {
@@ -32,7 +32,6 @@ const SCENE_CONFIG = {
       { type: 'nav', target: 'Panorama01', color: '#3b82f6', pitch: -22, yaw: 180, targetYaw: 180 }
     ]
   },
-  // ... (Panorama03 ~ 08 및 세부 공간 설정은 동일하며, title 속성만 추가됨)
   'bong01': { title: '봉안당 1', img: '/images/bong01.jpg', hotspots: [] },
   'bong02': { title: '봉안당 2', img: '/images/bong02.jpg', hotspots: [] },
   'bong03': { 
@@ -69,7 +68,6 @@ export default function MemorialApp() {
   const [inputMsg, setInputMsg] = useState("");
   const [guestbookList, setGuestbookList] = useState([
     { id: 1, name: "김철수", msg: "좋은 곳에서 편히 쉬시길 바랍니다.", date: "2026.02.12" },
-    { id: 2, name: "이영희", msg: "영원히 기억하겠습니다. 사랑합니다.", date: "2026.02.11" },
   ]);
 
   const viewerRef = useRef(null);
@@ -134,14 +132,16 @@ export default function MemorialApp() {
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
       <Script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js" strategy="afterInteractive" onLoad={() => setIsPannellumLoaded(true)} />
       
-      <div className="portrait-lock-container">
+      <div className="full-container">
         {activeMenu === 'main' && (
-          <div className="main-wrap">
-            <img src="/images/main.jpg" className="bg-img" />
-            <div className="main-content">
-              <h1>추모관</h1>
-              <p>영원한 안식, 함께 기억합니다</p>
-              <div className="nav-btns">
+          <div className="main-viewport">
+            <img src="/images/main.jpg" className="full-bg" />
+            <div className="main-ui">
+              <div className="top-title">
+                <h1>추모관</h1>
+                <p>영원한 안식, 함께 기억합니다</p>
+              </div>
+              <div className="bottom-nav">
                 <button onClick={() => {
                   if (hasFlowered) {
                     setToastMessage(["이미 헌화하셨습니다.", "따뜻한 마음 감사합니다."]);
@@ -162,74 +162,50 @@ export default function MemorialApp() {
         )}
 
         {activeMenu === 'gallery' && (
-          <div className="pano-view-full">
-            <div ref={viewerRef} className="viewer" />
-            
-            {/* 상단 중앙 현재 위치 타이틀 */}
-            <div className="scene-title-badge">
-              {SCENE_CONFIG[currentScene]?.title}
-            </div>
-
-            <button className="close-btn" onClick={handleBack}><X size={28} /></button>
+          <div className="gallery-viewport">
+            <div ref={viewerRef} className="full-viewer" />
+            <div className="scene-badge">{SCENE_CONFIG[currentScene]?.title}</div>
+            <button className="gallery-exit" onClick={handleBack}><X size={32} /></button>
           </div>
         )}
 
         {showToast && (
-          <div className="toast">
+          <div className="center-toast">
             {toastMessage.map((line, i) => <div key={i}>{line}</div>)}
           </div>
         )}
 
-        {/* ... 방명록 로직 ... */}
-
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap');
-          body { margin: 0; background: #000; overflow: hidden; font-family: 'Noto Serif KR', serif; }
+          body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Noto Serif KR', serif; }
           
-          /* 모바일 락 컨테이너 */
-          .portrait-lock-container { position: fixed; inset: 0; background: #000; }
+          .full-container { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
+
+          /* 메인 화면 레이아웃 */
+          .main-viewport { position: relative; width: 100%; height: 100%; max-width: 450px; }
+          @media screen and (min-width: 1025px) { .main-viewport { border-inline: 1px solid #333; } }
+          .full-bg { width: 100%; height: 100%; object-fit: cover; }
+          .main-ui { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; padding: 10vh 0 8vh; background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent, rgba(0,0,0,0.5)); }
           
-          /* 데스크탑: 메인화면은 가독성을 위해 450px 유지, 추모관(파노라마)은 전체 화면 확장 */
-          @media screen and (min-width: 1025px) {
-            .portrait-lock-container:not(:has(.pano-view-full)) { 
-              max-width: 450px; left: 50%; transform: translateX(-50%); border-inline: 1px solid #333; 
-            }
-          }
+          .top-title h1 { font-size: 4rem; margin: 0; color: #1a1a1a; text-align: center; }
+          .top-title p { color: #333; text-align: center; font-size: 1.2rem; }
+          .bottom-nav { display: flex; justify-content: space-around; width: 100%; }
+          .bottom-nav button { background: none; border: none; color: white; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
 
-          /* 파노라마 전체 화면 (데스크탑 확장) */
-          .pano-view-full { position: fixed; inset: 0; z-index: 50; width: 100vw; height: 100vh; }
-          .viewer { width: 100%; height: 100%; }
+          /* 추모관 데스크탑 전체 화면 */
+          .gallery-viewport { position: fixed; inset: 0; z-index: 50; width: 100vw; height: 100vh; background: #000; }
+          .full-viewer { width: 100%; height: 100%; }
+          .scene-badge { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); border: 2px solid #ef4444; color: white; padding: 10px 30px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; z-index: 60; }
+          .gallery-exit { position: absolute; top: 30px; right: 30px; z-index: 60; background: rgba(0,0,0,0.5); border: 1px solid #fff; border-radius: 50%; width: 50px; height: 50px; color: white; display: flex; align-items: center; justify-content: center; }
 
-          /* 상단 중앙 장소명 배지 */
-          .scene-title-badge {
-            position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7); border: 2px solid #ef4444; border-radius: 8px;
-            color: white; padding: 8px 25px; font-weight: bold; font-size: 1.1rem; z-index: 60;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-          }
+          /* 3D 화살표 및 아이콘 */
+          .road-arrow { width: 50px; height: 70px; background: #ef4444; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); transform: translate(-50%, -50%) rotateX(60deg); cursor: pointer; }
+          .room-tag { background: rgba(0,0,0,0.75); border: 2px solid #ef4444; color: white; padding: 6px 16px; border-radius: 6px; font-weight: bold; transform: translate(-50%, -50%); white-space: nowrap; }
 
-          /* 3D 로드뷰 화살표 */
-          .road-arrow {
-            width: 40px; height: 60px; background-color: #ef4444;
-            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-            transform: translate(-50%, -50%) rotateX(65deg); /* 바닥에 누운 느낌 */
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            cursor: pointer; transition: transform 0.2s;
-          }
-          .road-arrow:hover { transform: translate(-50%, -50%) rotateX(65deg) scale(1.2); }
-
-          /* 공간 이름 박스 */
-          .room-tag {
-            background: rgba(0,0,0,0.7); border: 2px solid #ef4444; border-radius: 6px;
-            color: white; padding: 6px 14px; font-weight: bold; white-space: nowrap;
-            transform: translate(-50%, -50%); box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-          }
-
-          /* 기타 스타일 ... */
-          .main-wrap { position: relative; width: 100%; height: 100%; }
-          .bg-img { width: 100%; height: 100%; object-fit: cover; }
-          .close-btn { position: absolute; top: 30px; right: 20px; z-index: 60; background: rgba(0,0,0,0.5); border: 1px solid #555; border-radius: 50%; width: 44px; height: 44px; color: white; display: flex; align-items: center; justify-content: center; }
-          .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 16px 32px; border-radius: 20px; z-index: 500; text-align: center; }
+          /* 토스트 정렬 */
+          .center-toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 20px 40px; border-radius: 20px; z-index: 500; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+          .flower-anim { position: absolute; left: 50%; bottom: 25%; z-index: 100; animation: up-fade 2.6s forwards; }
+          @keyframes up-fade { 0% { transform: translate(-50%, 0) scale(0.7); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -150px) scale(1.1); opacity: 0; } }
         `}</style>
       </div>
     </>
