@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Script from 'next/script';
 import { Flower2, Landmark, NotebookPen, X, Send } from 'lucide-react';
 
-// === 리뉴얼된 파노라마 설정 (사용자 지정 파일만 사용) ===
+// === 사용자 지정 파노라마 데이터 (Panorama01 ~ 08 전용) ===
 const SCENE_CONFIG = {
   'Panorama01': {
     title: '메인 광장',
@@ -33,24 +33,7 @@ const SCENE_CONFIG = {
     ]
   },
   'bong01': { title: '봉안당 1', img: '/images/bong01.jpg', hotspots: [] },
-  'bong02': { title: '봉안당 2', img: '/images/bong02.jpg', hotspots: [] },
-  'bong03': { 
-    title: '봉안당 3',
-    img: '/images/bong03.jpg', 
-    hotspots: [
-      { type: 'room', target: 'family', text: '가족추모실', pitch: 5, yaw: -20 },
-      { type: 'room', target: 'per', text: '개인추모실', pitch: 5, yaw: 20 }
-    ] 
-  },
-  'res': { title: '레스토랑', img: '/images/res.jpg', hotspots: [] },
-  'office': { title: '오피스', img: '/images/office.jpg', hotspots: [] },
-  'dis': { title: '전시관', img: '/images/dis.jpg', hotspots: [] },
-  'jip': { title: '집회장', img: '/images/jip.jpg', hotspots: [] },
-  'cafe': { title: '카페', img: '/images/cafe.jpg', hotspots: [] },
-  'hotel': { title: '호텔', img: '/images/hotel.jpg', hotspots: [] },
-  'pat': { title: '팻시설', img: '/images/pat.jpg', hotspots: [] },
-  'family': { title: '가족추모실', img: '/images/family.jpg', hotspots: [] },
-  'per': { title: '개인추모실', img: '/images/per.jpg', hotspots: [] }
+  'res': { title: '레스토랑', img: '/images/res.jpg', hotspots: [] }
 };
 
 export default function MemorialApp() {
@@ -66,12 +49,16 @@ export default function MemorialApp() {
   const [showGuestbook, setShowGuestbook] = useState(false);
   const [inputName, setInputName] = useState("");
   const [inputMsg, setInputMsg] = useState("");
-  const [guestbookList, setGuestbookList] = useState([
-    { id: 1, name: "김철수", msg: "좋은 곳에서 편히 쉬시길 바랍니다.", date: "2026.02.12" },
-  ]);
+  const [guestbookList, setGuestbookList] = useState([{ id: 1, name: "관리자", msg: "방문해주셔서 감사합니다.", date: "2026.02.24" }]);
 
   const viewerRef = useRef(null);
   const pannellumInstance = useRef(null);
+
+  const displayToast = (msgArray) => {
+    setToastMessage(msgArray);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
 
   const handleEnterGallery = () => {
     setCurrentScene('Panorama01');
@@ -128,86 +115,71 @@ export default function MemorialApp() {
   }, [activeMenu, currentScene, isPannellumLoaded, initView]);
 
   return (
-    <>
+    <div className="app-container">
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
       <Script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js" strategy="afterInteractive" onLoad={() => setIsPannellumLoaded(true)} />
       
-      <div className="full-container">
-        {activeMenu === 'main' && (
-          <div className="main-viewport">
-            <img src="/images/main.jpg" className="full-bg" />
-            <div className="main-ui">
-              <div className="top-title">
-                <h1>추모관</h1>
-                <p>영원한 안식, 함께 기억합니다</p>
-              </div>
-              <div className="bottom-nav">
-                <button onClick={() => {
-                  if (hasFlowered) {
-                    setToastMessage(["이미 헌화하셨습니다.", "따뜻한 마음 감사합니다."]);
-                    setShowToast(true);
-                    setTimeout(() => setShowToast(false), 3000);
-                  } else {
-                    setHasFlowered(true);
-                    setIsFlowering(true);
-                    setTimeout(() => setIsFlowering(false), 2600);
-                  }
-                }}><Flower2 color="white" /><span>헌화</span></button>
-                <button onClick={handleEnterGallery}><Landmark color="white" /><span>추모관</span></button>
-                <button onClick={() => setShowGuestbook(true)}><NotebookPen color="white" /><span>방명록</span></button>
-              </div>
+      {activeMenu === 'main' && (
+        <div className="main-viewport">
+          <img src="/images/main.jpg" className="full-bg" />
+          <div className="main-overlay">
+            <div className="top-title">
+              <h1>추모관</h1>
+              <p>영원한 안식, 함께 기억합니다</p>
             </div>
-            {isFlowering && <div className="flower-anim"><img src="/images/guk.png" /></div>}
+            <div className="bottom-menu">
+              <button onClick={() => {
+                if (hasFlowered) {
+                  displayToast(["이미 헌화하셨습니다.", "따뜻한 마음 감사합니다."]);
+                } else {
+                  setHasFlowered(true);
+                  setIsFlowering(true);
+                  setTimeout(() => setIsFlowering(false), 2600);
+                }
+              }}><Flower2 color="white" /><span>헌화</span></button>
+              <button onClick={handleEnterGallery}><Landmark color="white" /><span>추모관</span></button>
+              <button onClick={() => setShowGuestbook(true)}><NotebookPen color="white" /><span>방명록</span></button>
+            </div>
           </div>
-        )}
+          {isFlowering && <div className="flower-anim"><img src="/images/guk.png" /></div>}
+        </div>
+      )}
 
-        {activeMenu === 'gallery' && (
-          <div className="gallery-viewport">
-            <div ref={viewerRef} className="full-viewer" />
-            <div className="scene-badge">{SCENE_CONFIG[currentScene]?.title}</div>
-            <button className="gallery-exit" onClick={handleBack}><X size={32} /></button>
-          </div>
-        )}
+      {activeMenu === 'gallery' && (
+        <div className="gallery-full-viewport">
+          <div ref={viewerRef} className="viewer-canvas" />
+          <div className="scene-title-top">{SCENE_CONFIG[currentScene]?.title}</div>
+          <button className="exit-button" onClick={handleBack}><X size={32} /></button>
+        </div>
+      )}
 
-        {showToast && (
-          <div className="center-toast">
-            {toastMessage.map((line, i) => <div key={i}>{line}</div>)}
-          </div>
-        )}
+      {showToast && (
+        <div className="toast-center">
+          {toastMessage.map((line, i) => <div key={i}>{line}</div>)}
+        </div>
+      )}
 
-        <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap');
-          body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Noto Serif KR', serif; }
-          
-          .full-container { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
-
-          /* 메인 화면 레이아웃 */
-          .main-viewport { position: relative; width: 100%; height: 100%; max-width: 450px; }
-          @media screen and (min-width: 1025px) { .main-viewport { border-inline: 1px solid #333; } }
-          .full-bg { width: 100%; height: 100%; object-fit: cover; }
-          .main-ui { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; padding: 10vh 0 8vh; background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent, rgba(0,0,0,0.5)); }
-          
-          .top-title h1 { font-size: 4rem; margin: 0; color: #1a1a1a; text-align: center; }
-          .top-title p { color: #333; text-align: center; font-size: 1.2rem; }
-          .bottom-nav { display: flex; justify-content: space-around; width: 100%; }
-          .bottom-nav button { background: none; border: none; color: white; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
-
-          /* 추모관 데스크탑 전체 화면 */
-          .gallery-viewport { position: fixed; inset: 0; z-index: 50; width: 100vw; height: 100vh; background: #000; }
-          .full-viewer { width: 100%; height: 100%; }
-          .scene-badge { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); border: 2px solid #ef4444; color: white; padding: 10px 30px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; z-index: 60; }
-          .gallery-exit { position: absolute; top: 30px; right: 30px; z-index: 60; background: rgba(0,0,0,0.5); border: 1px solid #fff; border-radius: 50%; width: 50px; height: 50px; color: white; display: flex; align-items: center; justify-content: center; }
-
-          /* 3D 화살표 및 아이콘 */
-          .road-arrow { width: 50px; height: 70px; background: #ef4444; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); transform: translate(-50%, -50%) rotateX(60deg); cursor: pointer; }
-          .room-tag { background: rgba(0,0,0,0.75); border: 2px solid #ef4444; color: white; padding: 6px 16px; border-radius: 6px; font-weight: bold; transform: translate(-50%, -50%); white-space: nowrap; }
-
-          /* 토스트 정렬 */
-          .center-toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 20px 40px; border-radius: 20px; z-index: 500; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-          .flower-anim { position: absolute; left: 50%; bottom: 25%; z-index: 100; animation: up-fade 2.6s forwards; }
-          @keyframes up-fade { 0% { transform: translate(-50%, 0) scale(0.7); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -150px) scale(1.1); opacity: 0; } }
-        `}</style>
-      </div>
-    </>
+      <style jsx global>{`
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Noto Serif KR', serif; }
+        .app-container { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .main-viewport { position: relative; width: 100%; height: 100%; max-width: 450px; background: #000; }
+        @media screen and (min-width: 1025px) { .main-viewport { border-left: 1px solid #333; border-right: 1px solid #333; } }
+        .full-bg { width: 100%; height: 100%; object-fit: cover; }
+        .main-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 10vh 0 8vh; background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent, rgba(0,0,0,0.5)); z-index: 10; }
+        h1 { font-size: 4rem; margin: 0; color: #1a1a1a; text-align: center; font-weight: 700; }
+        p { color: #333; text-align: center; font-size: 1.2rem; }
+        .bottom-menu { display: flex; justify-content: space-around; width: 100%; }
+        .bottom-menu button { background: none; border: none; color: white; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        .gallery-full-viewport { position: fixed; inset: 0; z-index: 100; width: 100vw; height: 100vh; }
+        .viewer-canvas { width: 100%; height: 100%; }
+        .scene-title-top { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); border: 2px solid #ef4444; color: white; padding: 10px 30px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; z-index: 110; }
+        .exit-button { position: absolute; top: 30px; right: 30px; z-index: 110; background: rgba(0,0,0,0.5); border: 1px solid #fff; border-radius: 50%; width: 50px; height: 50px; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .road-arrow { width: 50px; height: 70px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); transform: translate(-50%, -50%) rotateX(60deg); cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        .room-tag { background: rgba(0,0,0,0.8); border: 2.5px solid #ef4444; color: white; padding: 7px 18px; border-radius: 8px; font-weight: bold; transform: translate(-50%, -50%); white-space: nowrap; font-size: 1rem; }
+        .toast-center { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 22px 45px; border-radius: 20px; z-index: 500; text-align: center; backdrop-filter: blur(5px); }
+        .flower-anim { position: absolute; left: 50%; bottom: 25%; transform: translateX(-50%); z-index: 20; animation: flower-up 2.6s forwards; }
+        @keyframes flower-up { 0% { bottom: 25%; opacity: 0; } 20% { opacity: 1; } 100% { bottom: 60%; opacity: 0; } }
+      `}</style>
+    </div>
   );
 }
