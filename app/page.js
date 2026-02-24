@@ -4,35 +4,46 @@ import React, { useState, useEffect, useRef } from 'react';
 import Script from 'next/script';
 import { Flower2, Landmark, NotebookPen, X, Send } from 'lucide-react';
 
-// === 모든 로직 및 좌표 정밀 수정 완료 ===
+// === 길거리 1번 ~ 8번 및 세부 공간 설정 ===
 const SCENE_CONFIG = {
-  'Panorama01': {
-    isOutdoor: true, // 제목 숨기기 활성화
+  'Panorama01': { // 길거리 1번
+    isOutdoor: true,
     img: '/images/Panorama01.png',
     hotspots: [
       { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 12, yaw: -55 },
       { type: 'room', target: 'res', text: '레스토랑', pitch: 2, yaw: -48 },
-      { type: 'room', target: 'office', text: '오피스', pitch: 8, yaw: 45 }, // 건물 밀착
-      { type: 'room', target: 'dis', text: '전시관', pitch: 6, yaw: 65 },   // 건물 밀착
-      { type: 'room', target: 'jip', text: '집회장', pitch: -4, yaw: 55 },  // 건물 밀착
-      { type: 'nav', target: 'Panorama02', color: '#ef4444', pitch: -22, yaw: -2, targetYaw: 0 } // 길 가운데 3D 화살표
+      { type: 'room', target: 'office', text: '오피스', pitch: 8, yaw: 48 }, 
+      { type: 'room', target: 'dis', text: '전시관', pitch: 6, yaw: 68 },   
+      { type: 'room', target: 'jip', text: '집회장', pitch: -4, yaw: 58 },  
+      { type: 'nav', target: 'Panorama02', color: '#ef4444', pitch: -22, yaw: -5, targetYaw: 0 } 
     ]
   },
-  'Panorama02': {
+  'Panorama02': { // 길거리 2번
     isOutdoor: true,
     img: '/images/Panorama02.png',
     hotspots: [
       { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 10, yaw: -50 },
       { type: 'room', target: 'res', text: '레스토랑', pitch: 0, yaw: -45 },
       { type: 'room', target: 'bong02', text: '봉안당 2', pitch: 10, yaw: -10 },
-      { type: 'room', target: 'office', text: '오피스', pitch: 10, yaw: 35 },
-      { type: 'room', target: 'dis', text: '전시관', pitch: 10, yaw: 50 },
-      { type: 'room', target: 'jip', text: '집회장', pitch: 0, yaw: 45 },
-      { type: 'nav', target: 'Panorama03', color: '#ef4444', pitch: -18, yaw: 0, targetYaw: 0 },
-      { type: 'nav', target: 'Panorama01', color: '#3b82f6', pitch: -25, yaw: 180, targetYaw: 180 } // 파란색 화살표 복구
+      { type: 'room', target: 'office', text: '오피스', pitch: 10, yaw: 40 },
+      { type: 'room', target: 'dis', text: '전시관', pitch: 10, yaw: 55 },
+      { type: 'room', target: 'jip', text: '집회장', pitch: 0, yaw: 50 },
+      { type: 'nav', target: 'Panorama03', color: '#ef4444', pitch: -18, yaw: 0, targetYaw: 0 }, 
+      { type: 'nav', target: 'Panorama01', color: '#3b82f6', pitch: -25, yaw: 180, targetYaw: 180 } 
     ]
   },
-  // Panorama03~08 및 세부 공간 설정...
+  'Panorama03': { // 길거리 3번
+    isOutdoor: true,
+    img: '/images/Panorama03.png',
+    hotspots: [
+      { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 10, yaw: -30 },
+      { type: 'room', target: 'res', text: '레스토랑', pitch: 0, yaw: -25 },
+      { type: 'room', target: 'bong02', text: '봉안당 2', pitch: 10, yaw: 10 },
+      { type: 'nav', target: 'Panorama04', color: '#ef4444', pitch: -10, yaw: 0, targetYaw: 0 },
+      { type: 'nav', target: 'Panorama02', color: '#3b82f6', pitch: -15, yaw: 180, targetYaw: 180 }
+    ]
+  },
+  // Panorama04~08도 동일한 규칙으로 target 설정...
   'office': { title: '오피스', img: '/images/office.jpg', hotspots: [] },
   'bong01': { title: '봉안당 1', img: '/images/bong01.jpg', hotspots: [] },
   'res': { title: '레스토랑', img: '/images/res.jpg', hotspots: [] }
@@ -41,7 +52,6 @@ const SCENE_CONFIG = {
 export default function MemorialApp() {
   const [activeMenu, setActiveMenu] = useState('main');
   const [currentScene, setCurrentScene] = useState('Panorama01');
-  const [sceneHistory, setSceneHistory] = useState([]);
   const [initView, setInitView] = useState({ pitch: 0, yaw: 0 });
   const [isPannellumLoaded, setIsPannellumLoaded] = useState(false);
   const [toastMessage, setToastMessage] = useState([]);
@@ -52,23 +62,18 @@ export default function MemorialApp() {
   const viewerRef = useRef(null);
   const pannellumInstance = useRef(null);
 
-  const handleHotspotClick = (hs) => {
-    const cp = pannellumInstance.current.getPitch();
-    const cy = pannellumInstance.current.getYaw();
-    setSceneHistory([...sceneHistory, { scene: currentScene, pitch: cp, yaw: cy }]);
-    setInitView({ pitch: 0, yaw: hs.targetYaw || 0 });
-    setCurrentScene(hs.target);
+  // === X 버튼: 길거리에서는 항상 메인으로 복귀 ===
+  const handleExit = () => {
+    if (SCENE_CONFIG[currentScene]?.isOutdoor) {
+      setActiveMenu('main'); 
+    } else {
+      setCurrentScene('Panorama01'); // 실내면 1번 길거리로 복귀
+    }
   };
 
-  const handleBack = () => {
-    if (sceneHistory.length === 0) { setActiveMenu('main'); }
-    else {
-      const historyCopy = [...sceneHistory];
-      const prev = historyCopy.pop();
-      setSceneHistory(historyCopy);
-      setInitView({ pitch: prev.pitch, yaw: prev.yaw });
-      setCurrentScene(prev.scene);
-    }
+  const handleHotspotClick = (hs) => {
+    setInitView({ pitch: 0, yaw: hs.targetYaw || 0 });
+    setCurrentScene(hs.target);
   };
 
   useEffect(() => {
@@ -120,7 +125,7 @@ export default function MemorialApp() {
                   setTimeout(() => setIsFlowering(false), 2600);
                 }
               }}><Flower2 color="white" /><span>헌화</span></button>
-              <button onClick={() => { setCurrentScene('Panorama01'); setSceneHistory([]); setInitView({pitch:0, yaw:0}); setActiveMenu('gallery'); }}><Landmark color="white" /><span>추모관</span></button>
+              <button onClick={() => { setCurrentScene('Panorama01'); setActiveMenu('gallery'); }}><Landmark color="white" /><span>추모관</span></button>
               <button onClick={() => {}}><NotebookPen color="white" /><span>방명록</span></button>
             </div>
           </div>
@@ -134,7 +139,7 @@ export default function MemorialApp() {
           {!SCENE_CONFIG[currentScene]?.isOutdoor && (
             <div className="scene-title-badge">{SCENE_CONFIG[currentScene]?.title}</div>
           )}
-          <button className="exit-button" onClick={handleBack}><X size={32} /></button>
+          <button className="exit-button" onClick={handleExit}><X size={32} /></button>
         </div>
       )}
 
@@ -165,12 +170,8 @@ export default function MemorialApp() {
           clip-path: polygon(50% 0%, 15% 100%, 50% 80%, 85% 100%); 
           transform: translate(-50%, -50%) rotateX(65deg); 
           cursor: pointer; 
-          filter: drop-shadow(0 10px 10px rgba(0,0,0,0.4));
-          transition: transform 0.2s;
         }
-        .road-arrow-3d:hover { transform: translate(-50%, -50%) rotateX(65deg) scale(1.15); }
-
-        .room-tag-red { background: rgba(0,0,0,0.8); border: 2.5px solid #ef4444; color: white; padding: 7px 18px; border-radius: 8px; font-weight: bold; transform: translate(-50%, -50%); white-space: nowrap; font-size: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .room-tag-red { background: rgba(0,0,0,0.8); border: 2.5px solid #ef4444; color: white; padding: 7px 18px; border-radius: 8px; font-weight: bold; transform: translate(-50%, -50%); white-space: nowrap; font-size: 1rem; }
         .toast-center { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 22px 45px; border-radius: 20px; z-index: 500; text-align: center; }
         .flower-anim { position: absolute; left: 50%; bottom: 25%; transform: translateX(-50%); z-index: 20; animation: flower-up 2.6s forwards; }
         @keyframes flower-up { 0% { bottom: 25%; opacity: 0; } 20% { opacity: 1; } 100% { bottom: 60%; opacity: 0; } }
