@@ -50,9 +50,10 @@ const SCENE_CONFIG = {
       { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 10, yaw: -35 },
       { type: 'room', target: 'bong02', text: '봉안당 2', pitch: 10, yaw: 35 },
       { type: 'room', target: 'bong03', text: '봉안당 3', pitch: 12, yaw: 0 },
-      { type: 'nav', target: 'Panorama07', color: '#ef4444', pitch: -10, yaw: 15, targetYaw: 0, rotate: '90deg', w: 80, h: 110 },
-      { type: 'nav', target: 'Panorama06', color: '#10b981', pitch: -10, yaw: -15, targetYaw: 0, rotate: '-90deg', w: 80, h: 110 },
-      { type: 'nav', target: 'Panorama03', color: '#3b82f6', pitch: -15, yaw: 0, targetYaw: 180, rotate: '180deg', w: 80, h: 110 }
+      // [수정] 사용자 지정 수치 반영 (크기 60x90)
+      { type: 'nav', target: 'Panorama07', color: '#ef4444', pitch: -10, yaw: 15, targetYaw: 0, rotate: '90deg', w: 60, h: 90 },
+      { type: 'nav', target: 'Panorama06', color: '#10b981', pitch: -10, yaw: -15, targetYaw: 0, rotate: '-90deg', w: 60, h: 90 },
+      { type: 'nav', target: 'Panorama03', color: '#3b82f6', pitch: -15, yaw: 0, targetYaw: 180, rotate: '180deg', w: 60, h: 90 }
     ]
   },
   'Panorama06': { 
@@ -145,8 +146,8 @@ export default function MemorialApp() {
       pannellumInstance.current = window.pannellum.viewer(viewerRef.current, {
         type: "equirectangular", panorama: data.img,
         pitch: initView.pitch, yaw: initView.yaw,
-        hfov: 120, // [수정] 초기 진입 시야 120으로 복구
-        maxHfov: 120, // [수정] 최대 축소 범위 120
+        hfov: 90, // [수정] 왜곡 방지를 위해 시야각을 90으로 축소
+        maxHfov: 90, // [수정] 최대 축소 범위 90
         minHfov: 50,
         autoLoad: true, showControls: false,
         hotSpots: (data.hotspots || []).map(hs => ({
