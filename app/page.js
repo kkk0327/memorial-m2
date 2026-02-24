@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Script from 'next/script';
 import { Flower2, Landmark, NotebookPen, X, Send } from 'lucide-react';
 
-// === 사용자 지시 사항(길거리 1번 좌표 수정)만 반영된 데이터 ===
+// === 사용자 지시 사항(hfov 110)만 반영, 나머지 데이터는 절대 수정 없음 ===
 const SCENE_CONFIG = {
   'Panorama01': { 
     isOutdoor: true, 
@@ -15,7 +15,7 @@ const SCENE_CONFIG = {
       { type: 'room', target: 'office', text: '오피스', pitch: 4, yaw: 32 },
       { type: 'room', target: 'dis', text: '전시관', pitch: 3, yaw: 55 },
       { type: 'room', target: 'jip', text: '집회장', pitch: -8, yaw: 45 },
-      // [수정 반영] 사용자 요청 좌표: pitch -22, yaw -18
+      // 직전 수정된 좌표 유지: pitch -22, yaw -18
       { type: 'nav', target: 'Panorama02', color: '#ef4444', pitch: -22, yaw: -18, targetYaw: 0 }
     ]
   },
@@ -146,7 +146,9 @@ export default function MemorialApp() {
       pannellumInstance.current = window.pannellum.viewer(viewerRef.current, {
         type: "equirectangular", panorama: data.img,
         pitch: initView.pitch, yaw: initView.yaw,
-        hfov: 90, maxHfov: 90, minHfov: 50,
+        hfov: 110, // [수정] 사용자 요청 수치 반영
+        maxHfov: 110, // [수정] 최대 축소 범위 110
+        minHfov: 50,
         autoLoad: true, showControls: false,
         hotSpots: (data.hotspots || []).map(hs => ({
           pitch: hs.pitch, yaw: hs.yaw,
