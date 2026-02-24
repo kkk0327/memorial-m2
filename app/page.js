@@ -145,8 +145,8 @@ export default function MemorialApp() {
       pannellumInstance.current = window.pannellum.viewer(viewerRef.current, {
         type: "equirectangular", panorama: data.img,
         pitch: initView.pitch, yaw: initView.yaw,
-        hfov: 150, // [수정] 초기 진입 시야 150으로 확대
-        maxHfov: 150, // [수정] 최대 축소 범위 150
+        hfov: 120, // [수정] 초기 진입 시야 120으로 복구
+        maxHfov: 120, // [수정] 최대 축소 범위 120
         minHfov: 50,
         autoLoad: true, showControls: false,
         hotSpots: (data.hotspots || []).map(hs => ({
