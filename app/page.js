@@ -28,6 +28,7 @@ const SCENE_CONFIG = {
       { type: 'room', target: 'office', text: '오피스', pitch: 10, yaw: 40 },
       { type: 'room', target: 'dis', text: '전시관', pitch: 10, yaw: 55 },
       { type: 'room', target: 'jip', text: '집회장', pitch: 0, yaw: 50 },
+      // 검토 완료: 빨간색은 3번으로 전진, 파란색은 1번으로 후진
       { type: 'nav', target: 'Panorama03', color: '#ef4444', pitch: -18, yaw: 0, targetYaw: 0 }, 
       { type: 'nav', target: 'Panorama01', color: '#3b82f6', pitch: -25, yaw: 180, targetYaw: 180 } 
     ]
@@ -43,10 +44,78 @@ const SCENE_CONFIG = {
       { type: 'nav', target: 'Panorama02', color: '#3b82f6', pitch: -15, yaw: 180, targetYaw: 180 }
     ]
   },
-  // Panorama04~08도 동일한 규칙으로 target 설정...
+  'Panorama04': { // 길거리 4번
+    isOutdoor: true,
+    img: '/images/Panorama04.png',
+    hotspots: [
+      { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 10, yaw: -20 },
+      { type: 'room', target: 'bong02', text: '봉안당 2', pitch: 10, yaw: 20 },
+      { type: 'nav', target: 'Panorama05', color: '#ef4444', pitch: -12, yaw: 0, targetYaw: 0 },
+      { type: 'nav', target: 'Panorama03', color: '#3b82f6', pitch: -15, yaw: 180, targetYaw: 180 }
+    ]
+  },
+  'Panorama05': { // 길거리 5번
+    isOutdoor: true,
+    img: '/images/Panorama05.png',
+    hotspots: [
+      { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 10, yaw: -15 },
+      { type: 'room', target: 'res', text: '레스토랑', pitch: 0, yaw: -10 },
+      { type: 'room', target: 'bong02', text: '봉안당 2', pitch: 10, yaw: -45 },
+      { type: 'room', target: 'bong03', text: '봉안당 3', pitch: 10, yaw: 30 },
+      { type: 'nav', target: 'Panorama07', color: '#ef4444', pitch: -10, yaw: 45, targetYaw: 45 },
+      { type: 'nav', target: 'Panorama06', color: '#10b981', pitch: -10, yaw: 0, targetYaw: 0 },
+      { type: 'nav', target: 'Panorama04', color: '#3b82f6', pitch: -15, yaw: -150, targetYaw: -150 }
+    ]
+  },
+  'Panorama06': { // 길거리 6번
+    isOutdoor: true,
+    img: '/images/Panorama06.png',
+    hotspots: [
+      { type: 'room', target: 'bong01', text: '봉안당 1', pitch: 10, yaw: -45 },
+      { type: 'room', target: 'res', text: '레스토랑', pitch: 0, yaw: -40 },
+      { type: 'room', target: 'bong03', text: '봉안당 3', pitch: 10, yaw: 35 },
+      { type: 'room', target: 'cafe', text: '카페', pitch: 10, yaw: 10 },
+      { type: 'nav', target: 'Panorama05', color: '#3b82f6', pitch: -15, yaw: 160, targetYaw: 160 }
+    ]
+  },
+  'Panorama07': { // 길거리 7번
+    isOutdoor: true,
+    img: '/images/Panorama07.png',
+    hotspots: [
+      { type: 'room', target: 'bong02', text: '봉안당 2', pitch: 10, yaw: 45 },
+      { type: 'room', target: 'bong03', text: '봉안당 3', pitch: 10, yaw: -45 },
+      { type: 'nav', target: 'Panorama08', color: '#ef4444', pitch: -10, yaw: 0, targetYaw: 0 },
+      { type: 'nav', target: 'Panorama05', color: '#3b82f6', pitch: -15, yaw: -135, targetYaw: -135 }
+    ]
+  },
+  'Panorama08': { // 길거리 8번
+    isOutdoor: true,
+    img: '/images/Panorama08.png',
+    hotspots: [
+      { type: 'room', target: 'hotel', text: '호텔', pitch: 10, yaw: -5 },
+      { type: 'room', target: 'pat', text: '팻시설', pitch: 10, yaw: 15 },
+      { type: 'nav', target: 'Panorama07', color: '#3b82f6', pitch: -15, yaw: -150, targetYaw: -150 }
+    ]
+  },
+  // === 세부 공간 ===
   'office': { title: '오피스', img: '/images/office.jpg', hotspots: [] },
   'bong01': { title: '봉안당 1', img: '/images/bong01.jpg', hotspots: [] },
-  'res': { title: '레스토랑', img: '/images/res.jpg', hotspots: [] }
+  'bong02': { title: '봉안당 2', img: '/images/bong02.jpg', hotspots: [] },
+  'bong03': { 
+    title: '봉안당 3', img: '/images/bong03.jpg', 
+    hotspots: [
+      { type: 'room', target: 'family', text: '가족추모실', pitch: 5, yaw: -20 },
+      { type: 'room', target: 'per', text: '개인추모실', pitch: 5, yaw: 20 }
+    ] 
+  },
+  'res': { title: '레스토랑', img: '/images/res.jpg', hotspots: [] },
+  'dis': { title: '전시관', img: '/images/dis.jpg', hotspots: [] },
+  'jip': { title: '집회장', img: '/images/jip.jpg', hotspots: [] },
+  'cafe': { title: '카페', img: '/images/cafe.jpg', hotspots: [] },
+  'hotel': { title: '호텔', img: '/images/hotel.jpg', hotspots: [] },
+  'pat': { title: '팻시설', img: '/images/pat.jpg', hotspots: [] },
+  'family': { title: '가족추모실', img: '/images/family.jpg', hotspots: [] },
+  'per': { title: '개인추모실', img: '/images/per.jpg', hotspots: [] }
 };
 
 export default function MemorialApp() {
@@ -62,12 +131,17 @@ export default function MemorialApp() {
   const viewerRef = useRef(null);
   const pannellumInstance = useRef(null);
 
-  // === X 버튼: 길거리에서는 항상 메인으로 복귀 ===
+  const displayToast = (msgArray) => {
+    setToastMessage(msgArray);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
   const handleExit = () => {
     if (SCENE_CONFIG[currentScene]?.isOutdoor) {
       setActiveMenu('main'); 
     } else {
-      setCurrentScene('Panorama01'); // 실내면 1번 길거리로 복귀
+      setCurrentScene('Panorama01'); 
     }
   };
 
@@ -115,15 +189,8 @@ export default function MemorialApp() {
             <h1>추모관</h1>
             <div className="bottom-menu">
               <button onClick={() => {
-                if (hasFlowered) {
-                  setToastMessage(["이미 헌화하셨습니다.", "따뜻한 마음 감사합니다."]);
-                  setShowToast(true);
-                  setTimeout(() => setShowToast(false), 3000);
-                } else {
-                  setHasFlowered(true);
-                  setIsFlowering(true);
-                  setTimeout(() => setIsFlowering(false), 2600);
-                }
+                if (hasFlowered) displayToast(["이미 헌화하셨습니다.", "따뜻한 마음 감사합니다."]);
+                else { setHasFlowered(true); setIsFlowering(true); setTimeout(() => setIsFlowering(false), 2600); }
               }}><Flower2 color="white" /><span>헌화</span></button>
               <button onClick={() => { setCurrentScene('Panorama01'); setActiveMenu('gallery'); }}><Landmark color="white" /><span>추모관</span></button>
               <button onClick={() => {}}><NotebookPen color="white" /><span>방명록</span></button>
