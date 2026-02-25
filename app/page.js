@@ -175,10 +175,10 @@ export default function MemorialApp() {
         <div className="main-viewport">
           <img src="/images/main.jpg" className="full-bg" />
           <div className="main-overlay">
-            {/* 제목 및 서브 문구 - z-index와 shadow 추가 */}
+            {/* [수정] image_a48202.png 스타일 반영: 좁은 간격 레이아웃 */}
             <div className="main-header">
-              <h1>추모관</h1>
-              <p className="sub-quote">영원한 안식, 함께 기억합니다.</p>
+              <h1 className="main-title">추모관</h1>
+              <p className="main-subtitle">영원한 안식, 함께 기억합니다.</p>
             </div>
             <div className="bottom-menu">
               <button onClick={() => {
@@ -227,26 +227,28 @@ export default function MemorialApp() {
           display: flex; 
           flex-direction: column; 
           justify-content: space-between; 
-          padding: 12vh 0 8vh; 
-          background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent, rgba(0,0,0,0.6)); 
+          padding: 15vh 0 8vh; 
+          background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent, rgba(0,0,0,0.6)); 
           z-index: 20; 
         }
         
+        /* image_a48202.png 스타일 적용: 정갈하게 밀착된 텍스트 */
         .main-header { text-align: center; z-index: 30; }
-        h1 { 
-          font-size: 4.2rem; 
+        .main-title { 
+          font-size: 3.8rem; 
           margin: 0; 
           color: #1a1a1a; 
           font-weight: 700; 
-          text-shadow: 0 2px 10px rgba(255,255,255,0.8);
+          letter-spacing: -1px;
+          text-shadow: 0 2px 8px rgba(255,255,255,0.7);
         }
-        .sub-quote { 
-          font-size: 1.3rem; 
+        .main-subtitle { 
+          font-size: 1.1rem; 
           color: #222; 
-          margin-top: 15px; 
-          font-weight: 600; 
+          margin: -5px 0 0 0; /* 제목과 밀착시키기 위해 마이너스 마진 적용 */
+          font-weight: 500; 
           letter-spacing: -0.5px;
-          text-shadow: 0 1px 5px rgba(255,255,255,0.9);
+          text-shadow: 0 1px 4px rgba(255,255,255,0.8);
         }
 
         .bottom-menu { display: flex; justify-content: space-around; width: 100%; z-index: 30; }
