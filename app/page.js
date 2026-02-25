@@ -175,6 +175,7 @@ export default function MemorialApp() {
         <div className="main-viewport">
           <img src="/images/main.jpg" className="full-bg" />
           <div className="main-overlay">
+            {/* 제목 및 서브 문구 - z-index와 shadow 추가 */}
             <div className="main-header">
               <h1>추모관</h1>
               <p className="sub-quote">영원한 안식, 함께 기억합니다.</p>
@@ -219,13 +220,36 @@ export default function MemorialApp() {
         .main-viewport { position: relative; width: 100%; height: 100%; max-width: 450px; background: #000; }
         @media screen and (min-width: 1025px) { .main-viewport { border-left: 1px solid #333; border-right: 1px solid #333; } }
         .full-bg { width: 100%; height: 100%; object-fit: cover; }
-        .main-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 10vh 0 8vh; background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent, rgba(0,0,0,0.5)); z-index: 10; }
         
-        .main-header { text-align: center; }
-        h1 { font-size: 4rem; margin: 0; color: #1a1a1a; font-weight: 700; }
-        .sub-quote { font-size: 1.2rem; color: #333; margin-top: 10px; font-weight: 500; letter-spacing: -0.5px; }
+        .main-overlay { 
+          position: absolute; 
+          inset: 0; 
+          display: flex; 
+          flex-direction: column; 
+          justify-content: space-between; 
+          padding: 12vh 0 8vh; 
+          background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent, rgba(0,0,0,0.6)); 
+          z-index: 20; 
+        }
+        
+        .main-header { text-align: center; z-index: 30; }
+        h1 { 
+          font-size: 4.2rem; 
+          margin: 0; 
+          color: #1a1a1a; 
+          font-weight: 700; 
+          text-shadow: 0 2px 10px rgba(255,255,255,0.8);
+        }
+        .sub-quote { 
+          font-size: 1.3rem; 
+          color: #222; 
+          margin-top: 15px; 
+          font-weight: 600; 
+          letter-spacing: -0.5px;
+          text-shadow: 0 1px 5px rgba(255,255,255,0.9);
+        }
 
-        .bottom-menu { display: flex; justify-content: space-around; width: 100%; }
+        .bottom-menu { display: flex; justify-content: space-around; width: 100%; z-index: 30; }
         .bottom-menu button { background: none; border: none; color: white; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
         .gallery-full-viewport { position: fixed; inset: 0; z-index: 100; width: 100vw; height: 100vh; }
         .viewer-canvas { width: 100%; height: 100%; }
