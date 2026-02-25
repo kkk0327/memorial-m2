@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Script from 'next/script';
-import { Flower2, Landmark, NotebookPen, X, Send } from 'lucide-react';
+import { Flower2, Landmark, NotebookPen, X } from 'lucide-react';
 
-// === 모든 로직과 좌표가 검증된 100% 완전한 데이터 ===
+// === 사용자 지시 데이터 완벽 보존 ===
 const SCENE_CONFIG = {
   'Panorama01': { 
     isOutdoor: true, 
@@ -15,6 +15,7 @@ const SCENE_CONFIG = {
       { type: 'room', target: 'office', text: '오피스', pitch: 4, yaw: 32 },
       { type: 'room', target: 'dis', text: '전시관', pitch: 3, yaw: 55 },
       { type: 'room', target: 'jip', text: '집회장', pitch: -8, yaw: 45 },
+      // 고정 좌표: pitch -22, yaw -18
       { type: 'nav', target: 'Panorama02', color: '#ef4444', pitch: -22, yaw: -18, targetYaw: 0 }
     ]
   },
@@ -107,7 +108,7 @@ const SCENE_CONFIG = {
 };
 
 export default function MemorialApp() {
-  const [activeMenu, setActiveMenu] = useState('main');
+  const [activeMenu, setActiveMenu] = useState('main'); // main, video, gallery
   const [currentScene, setCurrentScene] = useState('Panorama01');
   const [lastOutdoorScene, setLastOutdoorScene] = useState('Panorama01');
   const [initView, setInitView] = useState({ pitch: 0, yaw: 0 });
@@ -119,6 +120,13 @@ export default function MemorialApp() {
 
   const viewerRef = useRef(null);
   const pannellumInstance = useRef(null);
+
+  // === 핸들러 로직 ===
+  const startGallery = () => {
+    setCurrentScene('Panorama01');
+    setInitView({ pitch: 0, yaw: 0 });
+    setActiveMenu('gallery');
+  };
 
   const handleExit = () => {
     if (SCENE_CONFIG[currentScene]?.isOutdoor) {
@@ -171,11 +179,11 @@ export default function MemorialApp() {
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
       <Script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js" strategy="afterInteractive" onLoad={() => setIsPannellumLoaded(true)} />
       
+      {/* 1. 메인 화면 */}
       {activeMenu === 'main' && (
         <div className="main-viewport">
           <img src="/images/main.jpg" className="full-bg" />
           <div className="main-overlay">
-            {/* [수정] image_a48202.png 스타일 반영: 좁은 간격 레이아웃 */}
             <div className="main-header">
               <h1 className="main-title">추모관</h1>
               <p className="main-subtitle">영원한 안식, 함께 기억합니다.</p>
@@ -190,7 +198,7 @@ export default function MemorialApp() {
                   setTimeout(() => setIsFlowering(false), 2600);
                 }
               }}><Flower2 color="white" /><span>헌화</span></button>
-              <button onClick={() => { setCurrentScene('Panorama01'); setInitView({pitch:0, yaw:0}); setActiveMenu('gallery'); }}><Landmark color="white" /><span>추모관</span></button>
+              <button onClick={() => setActiveMenu('video')}><Landmark color="white" /><span>추모관</span></button>
               <button onClick={() => {}}><NotebookPen color="white" /><span>방명록</span></button>
             </div>
           </div>
@@ -198,6 +206,23 @@ export default function MemorialApp() {
         </div>
       )}
 
+      {/* 2. 영상 재생 화면 (추가된 로직) */}
+      {activeMenu === 'video' && (
+        <div className="video-full-viewport">
+          <video 
+            src="/videos/mo01.mp4" 
+            autoPlay 
+            muted={false} 
+            onEnded={startGallery} 
+            className="full-video-element"
+          />
+          <button className="video-exit-button" onClick={startGallery}>
+            <X size={32} color="white" />
+          </button>
+        </div>
+      )}
+
+      {/* 3. 파노라마 갤러리 화면 */}
       {activeMenu === 'gallery' && (
         <div className="gallery-full-viewport">
           <div ref={viewerRef} className="viewer-canvas" />
@@ -217,49 +242,35 @@ export default function MemorialApp() {
       <style jsx global>{`
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Noto Serif KR', serif; }
         .app-container { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        
+        /* 메인 화면 */
         .main-viewport { position: relative; width: 100%; height: 100%; max-width: 450px; background: #000; }
         @media screen and (min-width: 1025px) { .main-viewport { border-left: 1px solid #333; border-right: 1px solid #333; } }
         .full-bg { width: 100%; height: 100%; object-fit: cover; }
-        
-        .main-overlay { 
-          position: absolute; 
-          inset: 0; 
-          display: flex; 
-          flex-direction: column; 
-          justify-content: space-between; 
-          padding: 15vh 0 8vh; 
-          background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent, rgba(0,0,0,0.6)); 
-          z-index: 20; 
-        }
-        
-        /* image_a48202.png 스타일 적용: 정갈하게 밀착된 텍스트 */
+        .main-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 15vh 0 8vh; background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent, rgba(0,0,0,0.6)); z-index: 20; }
         .main-header { text-align: center; z-index: 30; }
-        .main-title { 
-          font-size: 3.8rem; 
-          margin: 0; 
-          color: #1a1a1a; 
-          font-weight: 700; 
-          letter-spacing: -1px;
-          text-shadow: 0 2px 8px rgba(255,255,255,0.7);
-        }
-        .main-subtitle { 
-          font-size: 1.1rem; 
-          color: #222; 
-          margin: -5px 0 0 0; /* 제목과 밀착시키기 위해 마이너스 마진 적용 */
-          font-weight: 500; 
-          letter-spacing: -0.5px;
-          text-shadow: 0 1px 4px rgba(255,255,255,0.8);
-        }
-
+        .main-title { font-size: 3.8rem; margin: 0; color: #1a1a1a; font-weight: 700; letter-spacing: -1px; text-shadow: 0 2px 8px rgba(255,255,255,0.7); }
+        .main-subtitle { font-size: 1.1rem; color: #222; margin: -5px 0 0 0; font-weight: 500; letter-spacing: -0.5px; text-shadow: 0 1px 4px rgba(255,255,255,0.8); }
         .bottom-menu { display: flex; justify-content: space-around; width: 100%; z-index: 30; }
         .bottom-menu button { background: none; border: none; color: white; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+
+        /* 영상 화면 (전체화면) */
+        .video-full-viewport { position: fixed; inset: 0; background: #000; z-index: 150; display: flex; align-items: center; justify-content: center; }
+        .full-video-element { width: 100%; height: 100%; object-fit: cover; }
+        .video-exit-button { position: absolute; top: 30px; right: 30px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.5); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 160; }
+
+        /* 갤러리 화면 */
         .gallery-full-viewport { position: fixed; inset: 0; z-index: 100; width: 100vw; height: 100vh; }
         .viewer-canvas { width: 100%; height: 100%; }
         .scene-title-badge { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); border: 2px solid #ef4444; color: white; padding: 10px 30px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; z-index: 110; }
         .exit-button { position: absolute; top: 30px; right: 30px; z-index: 110; background: rgba(0,0,0,0.5); border: 1px solid #fff; border-radius: 50%; width: 50px; height: 50px; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        
+        /* 핫스팟 스타일 */
         .custom-hotspot { z-index: 100; pointer-events: auto; }
         .road-arrow-3d { clip-path: polygon(50% 0%, 15% 100%, 50% 80%, 85% 100%); cursor: pointer; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.4)); }
         .room-tag-red { background: rgba(0,0,0,0.8); border: 2.5px solid #ef4444; color: white; padding: 7px 18px; border-radius: 8px; font-weight: bold; transform: translate(-50%, -50%); white-space: nowrap; font-size: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; }
+        
+        /* 기타 UI */
         .toast-center { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 22px 45px; border-radius: 20px; z-index: 500; text-align: center; }
         .flower-anim { position: absolute; left: 50%; bottom: 25%; transform: translateX(-50%); z-index: 20; animation: flower-up 2.6s forwards; }
         @keyframes flower-up { 0% { bottom: 25%; opacity: 0; } 20% { opacity: 1; } 100% { bottom: 60%; opacity: 0; } }
